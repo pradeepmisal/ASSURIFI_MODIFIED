@@ -131,7 +131,7 @@ const Monitor = () => {
 
     try {
       const response = await fetch(
-        `https://liquidity-monitoring-1.onrender.com/get_token?token_address=${selectedToken.token_address}&chain_id=${chainId}`,
+        `http://localhost:5000/get_token?token_address=${selectedToken.token_address}&chain_id=${chainId}`,
         {
           mode: "cors",
           headers: {
@@ -462,8 +462,8 @@ const Monitor = () => {
               <div className="space-y-2">
                 <h4 className="font-medium">Recommendations:</h4>
                 <ul className="space-y-1 list-disc pl-5">
-                  {tokenData.risk?.recommendations?.length ? (
-                    tokenData.risk.recommendations.map((item, index) => (
+                  {tokenData.recommendations?.length ? (
+                    tokenData.recommendations.map((item, index) => (
                       <li key={index} className="text-sm">{item}</li>
                     ))
                   ) : (

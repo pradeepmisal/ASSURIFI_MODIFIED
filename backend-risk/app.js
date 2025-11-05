@@ -6,14 +6,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
+
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // Initialize Gemini API
-const genAI = new GoogleGenerativeAI("AIzaSyA6M-6Ad8ZSIfDN0X5uuTMhNCz6Nr86P3U");
+const genAI = new GoogleGenerativeAI("AIzaSyBGAW2-Ha_dqr6-qjCmAx9_ahuaVdwSrTE");
 
 // Function to call Gemini API with token data
 async function analyzeTokenWithGemini(tokenData, contractAnalysisData, tokenName) {

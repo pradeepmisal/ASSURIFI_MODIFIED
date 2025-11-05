@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { TrendingUp, TrendingDown, User, Loader, PieChart } from "lucide-react";
 import { mockCoinData } from "@/data/mockCoinData";
 
-const SENTIMENT_API_URL = "https://sentiment-agent-1.onrender.com/analyze";
+const SENTIMENT_API_URL = "http://localhost:5001/analyze"; // Updated port to 5001
 const TWEETS_API_URL = "https://setiment2-agent.onrender.com/api/sentiment";
 
 const fetchSentimentAnalysis = async (coinName) => {

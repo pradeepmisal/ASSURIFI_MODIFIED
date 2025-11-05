@@ -107,7 +107,8 @@ const RiskAnalysis = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("https://risk-analysis-nzrq.onrender.com/risk-analysis", {
+      const response = await fetch("http://localhost:3001/risk-analysis", {
+
         method: "POST",
         headers: {
           "Content-Type": "application/json"

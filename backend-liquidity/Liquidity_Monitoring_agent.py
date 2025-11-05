@@ -15,8 +15,13 @@ app = Flask(__name__)
 CORS(app)
 load_dotenv()
 
-# Initialize Anthropic client
-anthropic = Anthropic(api_key=os.getenv("CLAUDE_API_KEY"))
+# Initialize Gemini API
+from google.generativeai import GenerativeModel
+import google.generativeai as genai
+
+# Set up Gemini API
+GEMINI_API_KEY = "AIzaSyDsiGu2ObVttpL-WE8FoUV-VMRGIzQnQOI"
+genai.configure(api_key=GEMINI_API_KEY)
 
 # ---------- Data Structures ----------
 class TokenData(TypedDict):
@@ -335,9 +340,6 @@ def analyze_market_sentiment(token_data: TokenData, previous_sentiment: Optional
 
 def generate_ai_insights(token_data: TokenData, weekly_data: Optional[Dict] = None, sentiment: Optional[MarketSentiment] = None) -> List[str]:
     try:
-        if not os.getenv("CLAUDE_API_KEY"):
-            return ["AI insights unavailable - API key missing"]
-        
         data = {
             "token": {
                 "name": token_data["base_token"]["name"],
@@ -355,19 +357,27 @@ def generate_ai_insights(token_data: TokenData, weekly_data: Optional[Dict] = No
             "sentiment": sentiment.get("score") if sentiment else None,
             "weekly_data": weekly_data
         }
-        
-        response = anthropic.messages.create(
-        model="claude-3-7-sonnet-20250219",
-        max_tokens=300,
-        temperature=0.4,
-        system="You are a crypto market analysis AI. Provide 3-5 specific, actionable insights...",
-        messages=[{"role": "user", "content": json.dumps(data)}]
-)
-        
-        ai_text = response.content[0].text
-        insights = [line.strip() for line in ai_text.split('\n') if line.strip()]
+
+        prompt = f"""You are a crypto market analysis AI. Provide 3-5 specific, actionable insights about this token based on the following data:
+
+{json.dumps(data, indent=2)}
+
+Please provide insights about:
+1. Market position and liquidity health
+2. Price momentum and trading patterns
+3. Risk factors and opportunities
+4. Market sentiment indicators
+5. Trading recommendations
+
+Format each insight as a separate bullet point."""
+
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+
+        ai_text = response.text
+        insights = [line.strip() for line in ai_text.split('\n') if line.strip() and not line.startswith('•')]
         return insights[:5]
-    
+
     except Exception as e:
         print(f"AI insight error: {e}")
         return ["Failed to generate insights"]

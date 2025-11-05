@@ -32,20 +32,17 @@ function isValidEthereumAddress(address) {
  */
 async function getEthereumContractSource(contractAddress) {
   try {
-    const url = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${contractAddress}&apikey=${ETHERSCAN_API_KEY}`;
+    // Etherscan V2 endpoint for contract source code
+    const url = `https://api.etherscan.io/v2/api?chainid=1&module=contract&action=getsourcecode&address=${contractAddress}&apikey=${ETHERSCAN_API_KEY}`;
     const response = await fetch(url);
     const data = await response.json();
-    
-    if (data.status !== "1") {
-      throw new Error(`Etherscan API error: ${data.message || 'Unknown error'}`);
+    if (!data || data.status !== "1" || !data.result || !data.result[0]) {
+      throw new Error(`Etherscan V2 API error: ${data.message || JSON.stringify(data)}`);
     }
-    
     const contractData = data.result[0];
-    
     if (!contractData.SourceCode || contractData.SourceCode.trim().length === 0) {
       throw new Error("No verified source code available for this contract");
     }
-    
     return {
       address: contractAddress,
       name: contractData.ContractName,
@@ -63,14 +60,14 @@ async function getEthereumContractSource(contractAddress) {
  * @param {string} modelName - (Optional) Gemini model to use.
  * @returns {Promise<string>} - The generated text response.
  */
-async function geminiAnalyze(prompt, modelName = "gemini-1.5-flash") {
+async function geminiAnalyze(prompt, modelName = "gemini-2.5-pro") {
   try {
     const model = genAI.getGenerativeModel({ model: modelName });
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (error) {
-    console.error("Error generating content with Gemini:", error);
-    throw error;
+    console.error("Error generating content with Gemini (gemini-2.5-pro):", error);
+    throw new Error("Gemini AI model 'gemini-2.5-pro' is not accessible with your API key or project setup. Check https://ai.google.dev/gemini-api/docs/models for activation.");
   }
 }
 

@@ -1,11 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, ChevronRight, Shield, BarChart2, MessageSquare } from 'lucide-react';
+import { Menu, X, ChevronRight, Shield, BarChart2, MessageSquare, Sun, Moon } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [dark, setDark] = useState(() =>
+    typeof window !== 'undefined' ? document.documentElement.classList.contains('dark') : false
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +17,22 @@ const Navbar: React.FC = () => {
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Sync with system & localStorage
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [dark]);
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') setDark(true);
+    if (saved === 'light') setDark(false);
   }, []);
 
   return (
@@ -65,6 +84,18 @@ const Navbar: React.FC = () => {
             </div>
           </div>
           <Link to="/about" className="text-foreground/80 hover:text-brand transition-colors font-medium">About</Link>
+        </div>
+        
+        {/* Dark Mode Toggle (always shown) */}
+        <div className="flex items-center space-x-2">
+          <button
+            className="rounded-full p-2 outline-none border border-transparent focus:ring-2 focus:ring-blue-400 bg-white/5 hover:bg-blue-400/10 transition"
+            aria-label="Toggle dark mode"
+            onClick={() => setDark((d) => !d)}
+            title="Toggle dark mode"
+          >
+            {dark ? <Sun className="h-5 w-5 text-yellow-300" /> : <Moon className="h-5 w-5 text-blue-300" />}
+          </button>
         </div>
         
         <div className="hidden md:flex items-center space-x-4">
@@ -138,6 +169,16 @@ const Navbar: React.FC = () => {
             >
               Launch App
             </Link>
+            <div className="mt-4 flex justify-end">
+              <button
+                className="rounded-full p-2 outline-none border border-transparent focus:ring-2 focus:ring-blue-400 bg-white/5 hover:bg-blue-400/10 transition"
+                aria-label="Toggle dark mode"
+                onClick={() => setDark((d) => !d)}
+                title="Toggle dark mode"
+              >
+                {dark ? <Sun className="h-5 w-5 text-yellow-300" /> : <Moon className="h-5 w-5 text-blue-300" />}
+              </button>
+            </div>
           </div>
         </div>
       )}

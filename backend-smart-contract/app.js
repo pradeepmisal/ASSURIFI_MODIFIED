@@ -3,7 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import cors from 'cors';
 
 const app = express();
-const port = 3000;
+const port = 3002;
+
 
 app.use(cors());
 
@@ -11,8 +12,9 @@ app.use(cors());
 app.use(express.json());
 
 // API Keys
-const ETHERSCAN_API_KEY = ' ';
-const GEMINI_API_KEY = ' ';
+const ETHERSCAN_API_KEY = 'JZ6J8YIBP8HN3S53NJRCDUAWEZ26XE5UZQ';
+const GEMINI_API_KEY = 'AIzaSyC6wRXNEP1EQ6ItrFDtOx2rJEKrLX2dr9I';
+
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -33,20 +35,17 @@ function isValidEthereumAddress(address) {
  */
 async function getEthereumContractSource(contractAddress) {
   try {
-    const url = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${contractAddress}&apikey=${ETHERSCAN_API_KEY}`;
+    // Etherscan V2 endpoint for contract source code
+    const url = `https://api.etherscan.io/v2/api?chainid=1&module=contract&action=getsourcecode&address=${contractAddress}&apikey=${ETHERSCAN_API_KEY}`;
     const response = await fetch(url);
     const data = await response.json();
-    
-    if (data.status !== "1") {
-      throw new Error(`Etherscan API error: ${data.message || 'Unknown error'}`);
+    if (!data || data.status !== "1" || !data.result || !data.result[0]) {
+      throw new Error(`Etherscan V2 API error: ${data.message || JSON.stringify(data)}`);
     }
-    
     const contractData = data.result[0];
-    
     if (!contractData.SourceCode || contractData.SourceCode.trim().length === 0) {
       throw new Error("No verified source code available for this contract");
     }
-    
     return {
       address: contractAddress,
       name: contractData.ContractName,
@@ -64,14 +63,15 @@ async function getEthereumContractSource(contractAddress) {
  * @param {string} modelName - (Optional) Gemini model to use
  * @returns {Promise<string>} - The generated text response
  */
-async function geminiAnalyze(prompt, modelName = "gemini-1.5-flash") {
+async function geminiAnalyze(prompt, modelName = "gemini-2.5-pro") {
   try {
     const model = genAI.getGenerativeModel({ model: modelName });
     const result = await model.generateContent(prompt);
     return result.response.text();
   } catch (error) {
-    console.error("Error generating content with Gemini:", error);
-    throw error;
+    // Hardened fallback: if gemini-pro does not work, show a meaningful error
+    console.error("Error generating content with Gemini (gemini-2.5-pro):", error);
+    throw new Error("Gemini AI model 'gemini-2.5-pro' is not accessible with your API key or project setup. See https://ai.google.dev/gemini-api/docs/models for eligibility.");
   }
 }
 
@@ -157,6 +157,76 @@ app.get('/analyze-contract', async (req, res) => {
     res.status(500).json({ error: error.message || "Failed to analyze smart contract" });
   }
 });
+// ASSUREFI/backend-smart-contract/app.js
+
+// ... existing imports (express, GoogleGenerativeAI, cors) ...
+
+// Ensure you have `node-fetch` or `axios` installed if you're not using built-in fetch
+// If you use `require('node-fetch')` for fetch in Node.js 14/16, make sure to install it: npm install node-fetch@2
+// For Node.js 18+ `fetch` is global.
+// If you prefer axios: npm install axios
+// const axios = require('axios'); // Uncomment if using axios
+
+// ... existing API Keys (ETHERSCAN_API_KEY, GEMINI_API_KEY) ...
+// ... existing Gemini initialization (genAI) ...
+// ... existing helper functions (isValidEthereumAddress, getEthereumContractSource, geminiAnalyze, analyzeContractWithGemini) ...
+
+// New: GET /api/search endpoint to proxy CoinGecko and extract contract addresses
+app.get('/api/search', async (req, res) => {
+  const queryName = req.query.name;
+
+  if (!queryName) {
+    return res.status(400).json({ error: "Missing 'name' query parameter" });
+  }
+
+  try {
+    const coingeckoUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(queryName)}`;
+    const response = await fetch(coingeckoUrl);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(`CoinGecko API error: ${response.statusText}`);
+    }
+
+    // For each coin, fetch detailed info to get platforms (limit to top 10 to avoid rate limits and show more results)
+    const tokensWithAddresses = [];
+    for (const coin of (data.coins || []).slice(0, 10)) {
+      let contract_address = null;
+      try {
+        const detailResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${coin.id}`);
+        const detailData = await detailResponse.json();
+        if (detailResponse.ok && detailData.platforms && Object.keys(detailData.platforms).length > 0) {
+          const platforms = detailData.platforms;
+          // Prefer Ethereum if available, else first available
+          const preferredPlatform = platforms.ethereum ? 'ethereum' : Object.keys(platforms)[0];
+          if (platforms[preferredPlatform]) {
+            contract_address = platforms[preferredPlatform];
+          }
+        }
+      } catch (detailError) {
+        console.warn(`Failed to fetch details for ${coin.id}:`, detailError.message);
+      }
+      // Always add the coin, even if no contract address
+      tokensWithAddresses.push({
+        id: coin.id,
+        name: coin.name,
+        symbol: coin.symbol,
+        contract_address: contract_address || null,
+        thumb: coin.thumb
+      });
+    }
+
+    return res.json(tokensWithAddresses);
+
+  } catch (error) {
+    console.error("Error fetching from CoinGecko:", error);
+    res.status(500).json({ error: `Failed to fetch token data: ${error.message}` });
+  }
+});
+
+// ... existing routes (app.get('/analyze-contract'), app.post('/analyze-contract'), app.get('/')) ...
+
+// ... existing app.listen ...
 
 // POST route for direct code analysis using JSON input (expects { code: "..." })
 app.post('/analyze-contract', async (req, res) => {
@@ -179,6 +249,30 @@ app.post('/analyze-contract', async (req, res) => {
   } catch (error) {
     console.error("Request error:", error);
     res.status(500).json({ error: error.message || "Failed to analyze smart contract" });
+  }
+});
+
+// Debug endpoint: list all Gemini models this key/project can access using REST
+app.get('/list-models', async (req, res) => {
+  try {
+    const results = {};
+    try {
+      const r1 = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`);
+      results.v1beta = await r1.json();
+    } catch (e) {
+      results.v1beta = { error: String(e) };
+    }
+    try {
+      const r2 = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${GEMINI_API_KEY}`);
+      results.v1 = await r2.json();
+    } catch (e) {
+      results.v1 = { error: String(e) };
+    }
+    console.log('Model list (REST):', results);
+    res.json(results);
+  } catch (error) {
+    console.error('Error listing Gemini models (REST):', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
