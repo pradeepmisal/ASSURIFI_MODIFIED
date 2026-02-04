@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { 
-  Activity, 
-  AlertTriangle, 
-  ArrowDownRight, 
-  AreaChart, 
-  Percent, 
-  BarChart3, 
-  Wallet, 
-  Search 
+import {
+  Activity,
+  AlertTriangle,
+  ArrowDownRight,
+  AreaChart,
+  Percent,
+  BarChart3,
+  Wallet,
+  Search
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   Card,
   CardContent,
   CardDescription,
@@ -39,114 +39,221 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { tokenData as defaultTokenData } from "@/data/liquidityData";
 
-// Updated tokens array with new fields: liquidity_lock_status and related_terms
-const tokens = [
-  {
-    token_name: "orchest",
-    token_address: "hMpvoZTcApksJyJAXuX1HDDCCE4tEvMd2325vLfpump",
-    smart_contract_address: "0x4575f41308ec1483f3d399aa9a2826d74da13deb",
-    liquidity_lock_status: "lock",
-    related_terms: "Standard Lock, No Unlock Option"
-  },
-  {
-    token_name: "yeye",
-    token_address: "9CMi4UyHbhhmoqcf6thKUWSZ6rAuwafQJd7u2CB8pump",
-    smart_contract_address: "0x36A500F731e2FFA29207499EFb29326b671000AC",
-    liquidity_lock_status: "lock",
-    related_terms: "Standard Lock, No Unlock Option"
-  },
-  {
-    token_name: "HoodGold",
-    token_address: "AkfgYS26wK9xBmh9gtAGZ2umtVecJYa4co5NayqWpump",
-    smart_contract_address: "akfgys26wk9xbmh9gtagz2umtvecjya4co5nayqwpump",
-    liquidity_lock_status: "lock",
-    related_terms: "Standard Lock, No Unlock Option"
-  },
-  {
-    token_name: "SwastiCoin",
-    token_address: "9d1HfhQztyZszDCFS5p2zX6FzNkAPQogvuR3oerXpump",
-    smart_contract_address: "9gyfbPVwwZx4y1hotNSLcqXCQNpNqqz6ZRvo8yTLpump",
-    liquidity_lock_status: "lock",
-    related_terms: "Standard Lock, No Unlock Option"
-  },
-  {
-    token_name: "Ron",
-    token_address: "ALbCJ7r81tPuFYpG2hEwsrk6WXBz73xVyWty992Fpump",
-    smart_contract_address: "0x23f043426b2336e723b32fb3bf4a1ca410f7c49a",
-    liquidity_lock_status: "Not Locked",
-    related_terms: "Owner has Full control over the token"
-  },
-  {
-    token_name: "jupyter",
-    token_address: "",
-    smart_contract_address: "0x4B1E80cAC91e2216EEb63e29B957eB91Ae9C2Be8",
-    liquidity_lock_status: "lock",
-    related_terms: "Standard Lock, No Unlock Option"
-  },
-  {
-    token_name: "Token OFFICIAL TRUMP",
-    token_address: "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
-    smart_contract_address: "0x576e2BeD8F7b46D34016198911Cdf9886f78bea7",
-    liquidity_lock_status: "Not Locked",
-    related_terms: "Owner has Full control over the token"
-  },
-  {
-    token_name: "Jito",
-    token_address: "jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL",
-    smart_contract_address: "0x7fB1ee12Ca098aF9bE5313401d7fCC5c8d7968D8",
-    liquidity_lock_status: "lock",
-    related_terms: "Standard Lock, No Unlock Option"
-  },
-  {
-    token_name: "Grass",
-    token_address: "Grass7B4RdKfBCjTKgSqnXkqjwiGvQyFbuSCUJr3XXjs",
-    smart_contract_address: "0x42f0d280e1f4fb064650653445a3c904e61f64b1",
-    liquidity_lock_status: "lock",
-    related_terms: "Standard Lock, No Unlock Option"
-  }
-];
+
+
 
 const Monitor = () => {
-  const [selectedTokenIndex, setSelectedTokenIndex] = useState(0);
-  // Instead of using a token address input, we use our tokens dropdown.
-  const [chainId] = useState("solana");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
   const [tokenData, setTokenData] = useState(defaultTokenData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedPair, setSelectedPair] = useState<any>(null);
+
+  // Ref to track if the search query update comes from a selection
+  // If true, we should skip the autocomplete search
+  const ignoreSearchRef = useRef(false);
 
   useEffect(() => {
     document.title = "Liquidity Monitor - AssureFi Guardian";
   }, []);
 
-  const fetchTokenData = async () => {
-    // Get the selected token details from the dropdown
-    const selectedToken = tokens[selectedTokenIndex];
-    // If no token address exists, show an error message.
-    if (!selectedToken.token_address.trim()) {
-      setError("Selected token does not have a valid token address");
+  // Debounce logic for autocomplete
+  useEffect(() => {
+    // If empty or just selected, don't search
+    if (!searchQuery || !searchQuery.trim()) {
+      setSearchResults([]);
+      setShowResults(false);
       return;
     }
+
+    // Don't search if we just selected something
+    if (ignoreSearchRef.current) {
+      ignoreSearchRef.current = false;
+      return;
+    }
+
+    // User is typing, clear previous selection
+    setSelectedPair(null);
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        // Use our backend proxy to avoid CORS issues if calling direct, 
+        // but here we use the proxy we created: /search/dex
+        const response = await fetch(`http://localhost:3002/search/dex?q=${encodeURIComponent(searchQuery)}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Limit suggestions to top 5 for cleaner UI
+          setSearchResults(data.slice(0, 5));
+          setShowResults(true);
+        }
+      } catch (error) {
+        console.error("Autocomplete error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSearchClick = async () => {
+    // Case 1: User selected a pair from dropdown explicitly
+    if (selectedPair) {
+      await fetchTokenData(selectedPair);
+      return;
+    }
+
+    // Case 2: User didn't select, but we have results (auto-select top)
+    if (searchResults.length > 0) {
+      const topResult = searchResults[0];
+      handleSelectPair(topResult);
+      await fetchTokenData(topResult); // Fetch immediately on button click
+    } else {
+      // Case 3: Fallback manual search if nothing in list
+      setIsSearching(true);
+      try {
+        const response = await fetch(`http://localhost:3002/search/dex?q=${encodeURIComponent(searchQuery)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            handleSelectPair(data[0]);
+            await fetchTokenData(data[0]); // Fetch immediately on button click
+          } else {
+            setError("No token found.");
+          }
+        }
+      } catch (e) { setError("Search failed"); }
+      finally { setIsSearching(false); }
+    }
+  };
+
+
+  const handleSelectPair = (pair: any) => {
+    ignoreSearchRef.current = true; // Set flag to ignore next search
+    setSelectedPair(pair);
+    setShowResults(false);
+    setSearchQuery(`${pair.baseToken.name} (${pair.baseToken.symbol})`);
+  };
+
+
+  const fetchTokenData = async (pair: any) => {
     setIsLoading(true);
+    setIsAnalyzing(true);
+    setHasSearched(true);
     setError("");
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/get_token?token_address=${selectedToken.token_address}&chain_id=${chainId}`,
-        {
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json",
+      // 1. Map DexScreener pair data
+      // 1. Map DexScreener pair data
+      // Cast to any to bypass strict TokenData checks for legacy fields
+      const transformedData: any = {
+        token_name: pair.baseToken.name,
+        token_symbol: pair.baseToken.symbol,
+        timestamp: Date.now(),
+        metrics: {
+          price: {
+            current: parseFloat(pair.priceUsd) || 0,
+            change: {
+              h1: pair.priceChange?.h1 || 0,
+              h6: pair.priceChange?.h6 || 0,
+              h24: pair.priceChange?.h24 || 0,
+            }
           },
-        }
-      );
+          volume: {
+            h1: 0,
+            h6: 0,
+            h24: pair.volume?.h24 || 0,
+          },
+          liquidity: pair.liquidity?.usd || 0,
+          market_cap: pair.fdv || 0,
+          fdv: pair.fdv || 0,
+          transactions: {
+            h1: { buys: 0, sells: 0, ratio: 0 }
+          }
+        },
+        risk: {
+          risk_score: 50,
+          vulnerabilities: [],
+          recommendations: [],
+          level: "Medium",
+          audit_status: "Unverified",
+          last_audit: "Pending"
+        },
+        ai_insights: [],
+        recommendations: [],
+        insights_list: [],
+        ai_insights_panel: null
+      };
 
-      const data = await response.json();
-      setTokenData(data);
+      // 2. Prepare Payload
+      const payload = {
+        token_name: pair.baseToken.name,
+        token_address: pair.baseToken.address,
+        smart_contract_address: pair.baseToken.address,
+        chain_id: pair.chainId
+      };
+
+      // 3. Fetch Risk Analysis (AWAITED - blocking UI)
+      let riskUpdates = {};
+      try {
+        const token = localStorage.getItem("token");
+        const headers: any = { "Content-Type": "application/json" };
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const riskResponse = await fetch("http://localhost:3002/risk-analysis", {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (riskResponse.ok) {
+          const riskResult = await riskResponse.json();
+
+          // Score Logic
+          let realScore = 0;
+          if (riskResult.contractAnalysis?.overallScore) realScore = riskResult.contractAnalysis.overallScore;
+          else if (riskResult.geminiAnalysis?.contractAnalysis?.overallScore) realScore = riskResult.geminiAnalysis.contractAnalysis.overallScore;
+          else if (riskResult.riskData && Array.isArray(riskResult.riskData)) {
+            const total = riskResult.riskData.reduce((acc: any, item: any) => acc + (item.risk || 0), 0);
+            realScore = Math.round(total / (riskResult.riskData.length || 1));
+          }
+          if (realScore === 0) realScore = 50;
+
+          riskUpdates = {
+            risk: { ...transformedData.risk, risk_score: realScore },
+            insights_list: riskResult.insightsList || [],
+            ai_insights_panel: riskResult.ai_insights_panel || null
+          };
+        }
+      } catch (riskErr) {
+        console.error("Risk Fetch Failed", riskErr);
+      }
+
+      // 4. Update State ONCE with ALL data
+      setTokenData({
+        ...transformedData,
+        ...riskUpdates
+      });
+
+
     } catch (err: any) {
-      setError(`Error: ${err.message}`);
-      console.error("Error fetching token data:", err);
+      console.error("Error processing token data:", err);
+      setError("Failed to process token data.");
     } finally {
       setIsLoading(false);
+      // Artificial Delay to ensure user sees the "Scanning" state for a moment if API is too fast
+      setTimeout(() => {
+        setIsAnalyzing(false);
+      }, 1500);
     }
   };
 
@@ -181,6 +288,7 @@ const Monitor = () => {
 
   // Risk level indicator
   const getRiskLevelColor = (score: number) => {
+    if (!score) return "bg-gray-500";
     if (score >= 75) return "bg-red-500";
     if (score >= 50) return "bg-yellow-500";
     return "bg-green-500";
@@ -222,24 +330,56 @@ const Monitor = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-              <div className="flex-1">
-                <select
-                  className="border rounded p-2 w-full"
-                  value={selectedTokenIndex}
-                  onChange={(e) => setSelectedTokenIndex(Number(e.target.value))}
-                >
-                  {tokens.map((token, index) => (
-                    <option key={index} value={index}>
-                      {token.token_name}
-                    </option>
-                  ))}
-                </select>
+            <div className="flex flex-col space-y-4">
+              <div className="relative z-50">
+                <div className="flex w-full items-center space-x-2">
+                  <Input
+                    type="text"
+                    placeholder="Search token name (e.g. USDC, WIF)"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      // If user clears input, hide results
+                      if (e.target.value === "") setShowResults(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSearchClick();
+                        setShowResults(false);
+                      }
+                    }}
+                  />
+                  <Button onClick={handleSearchClick} disabled={isSearching}>
+                    {isSearching ? "Searching..." : "Search"}
+                    {!isSearching && <Search className="ml-2 h-4 w-4" />}
+                  </Button>
+                </div>
+
+                {/* Autocomplete Dropdown - Absolute Position */}
+                {showResults && searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-md shadow-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 max-h-60 overflow-y-auto">
+                    {searchResults.map((pair: any, index: number) => (
+                      <div
+                        key={index}
+                        className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center border-b last:border-0 border-slate-100 dark:border-slate-800"
+                        onClick={() => handleSelectPair(pair)}
+                      >
+                        <div>
+                          <div className="font-bold flex items-center gap-2">
+                            {pair.baseToken.name} <span className="text-muted-foreground text-xs">({pair.baseToken.symbol})</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {pair.chainId} • ${parseFloat(pair.priceUsd).toFixed(6)}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="ml-2">
+                          Liq: ${(pair.liquidity?.usd / 1000).toFixed(0)}k
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <Button onClick={fetchTokenData} disabled={isLoading}>
-                {isLoading ? "Loading..." : "Analyze"}
-                {!isLoading && <Search className="ml-2 h-4 w-4" />}
-              </Button>
             </div>
             {error && (
               <Alert variant="destructive" className="mt-4">
@@ -251,300 +391,339 @@ const Monitor = () => {
           </CardContent>
         </Card>
 
-        {/* Token Overview Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="h-5 w-5 text-blue-500" />
-              <CardTitle>
-                Token Overview: {tokenData.token_name} ({tokenData.token_symbol})
-              </CardTitle>
-            </div>
-            <CardDescription>
-              Last updated: {formatDate(tokenData.timestamp)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
-                <div className="text-sm text-muted-foreground mb-1">Current Price</div>
-                <div className="text-2xl font-bold">
-                  {tokenData.metrics.price.current.toExponential(2)}
-                </div>
-                <div className="flex items-center mt-1">
-                  <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
-                  <span className="text-red-500">
-                    {tokenData.metrics.price.change.h24}% (24h)
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
-                <div className="text-sm text-muted-foreground mb-1">Liquidity</div>
-                <div className="text-2xl font-bold">
-                  ${formatNumber(tokenData.metrics.liquidity)}
-                </div>
-                <div className="flex items-center mt-1">
-                  <AreaChart className="h-4 w-4 text-blue-500 mr-1" />
-                  <span className="text-muted-foreground">
-                    vs Market Cap: ${formatNumber(tokenData.metrics.market_cap)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
-                <div className="text-sm text-muted-foreground mb-1">24h Volume</div>
-                <div className="text-2xl font-bold">
-                  ${formatNumber(tokenData.metrics.volume.h24)}
-                </div>
-                <div className="flex items-center mt-1">
-                  <BarChart3 className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-green-500">Active trading</span>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
-                <div className="text-sm text-muted-foreground mb-1">Risk Score</div>
-                <div className="text-2xl font-bold">
-                  {tokenData.risk?.risk_score ?? "N/A"}/100
-                </div>
-                <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full mt-2">
-                  <div
-                    className={`h-2 rounded-full ${getRiskLevelColor(tokenData.risk?.risk_score || 0)}`}
-                    style={{ width: `${tokenData.risk?.risk_score || 0}%` }}
-                  ></div>
-                </div>
+        {/* --- GLOBAL LOADING OVERLAY (The "Buffer") --- */}
+        {isAnalyzing && (
+          <div className="flex flex-col items-center justify-center py-20 min-h-[400px] bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-slate-800 animate-in fade-in duration-300">
+            <div className="flex flex-col items-center animate-pulse space-y-6">
+              <Search className="h-16 w-16 text-primary animate-bounce" />
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Scanning Token...</h2>
+                <p className="text-lg text-slate-500">AssureFi Analyzing Liquidity Depth & Risk Matrices</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
 
-        {/* New Liquidity Lock Details Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Liquidity Lock Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <p>
-                <strong>Status:</strong>{" "}
-                {tokens[selectedTokenIndex].liquidity_lock_status}
-              </p>
-              <p>
-                <strong>Related Terms:</strong>{" "}
-                {tokens[selectedTokenIndex].related_terms}
+        {/* --- INITIAL STATE (Hidden Dashboard) --- */}
+        {!hasSearched ? (
+          <div className="flex flex-col items-center justify-center h-[50vh] text-center space-y-6 opacity-60">
+            <div className="p-8 bg-slate-100 dark:bg-slate-800 rounded-full">
+              <Search className="h-16 w-16 text-slate-400" />
+            </div>
+            <div className="max-w-md space-y-2">
+              <h3 className="text-2xl font-bold tracking-tight">Ready to Monitor</h3>
+              <p className="text-muted-foreground">
+                Enter a token name or address above to begin a comprehensive risk and liquidity analysis.
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        ) : (
+          /* --- ACTUAL DASHBOARD CONTENT (Only shown after search) --- */
+          <div className={`space-y-6 ${isAnalyzing ? 'opacity-0 overflow-hidden h-0' : 'animate-in fade-in slide-in-from-bottom-4 duration-700'}`}>
 
-        {/* Liquidity Chart Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <AreaChart className="h-5 w-5 text-blue-500" />
-              <CardTitle>Liquidity Tracker</CardTitle>
+            {/* Token Overview Card */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Activity className="h-5 w-5 text-blue-500" />
+                  <CardTitle>
+                    Token Overview: {tokenData.token_name} ({tokenData.token_symbol})
+                  </CardTitle>
+                </div>
+                <CardDescription>
+                  Last updated: {formatDate(tokenData.timestamp)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Current Price</div>
+                    <div className="text-2xl font-bold">
+                      {tokenData.metrics.price.current.toExponential(2)}
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                      <span className="text-red-500">
+                        {tokenData.metrics.price.change.h24}% (24h)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Liquidity</div>
+                    <div className="text-2xl font-bold">
+                      ${formatNumber(tokenData.metrics.liquidity)}
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <AreaChart className="h-4 w-4 text-blue-500 mr-1" />
+                      <span className="text-muted-foreground">
+                        vs Market Cap: ${formatNumber(tokenData.metrics.market_cap)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">24h Volume</div>
+                    <div className="text-2xl font-bold">
+                      ${formatNumber(tokenData.metrics.volume.h24)}
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <BarChart3 className="h-4 w-4 text-green-500 mr-1" />
+                      <span className="text-green-500">Active trading</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* DexScreener Pair Info Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pair Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {selectedPair ? (
+                  <div className="space-y-2">
+                    <p><strong>Pair Address:</strong> <span className="text-xs text-muted-foreground">{selectedPair.pairAddress}</span></p>
+                    <p><strong>DEX:</strong> {selectedPair.dexId}</p>
+                    <p><strong>Chain:</strong> {selectedPair.chainId}</p>
+                    <p><strong>Base Token:</strong> {selectedPair.baseToken?.name} ({selectedPair.baseToken?.address.substring(0, 8)}...)</p>
+                    <p><strong>Quote Token:</strong> {selectedPair.quoteToken?.name} ({selectedPair.quoteToken?.symbol})</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Likely Liquidity Lock Status: <span className="italic">Check generic block explorer</span>
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">Select a token from search to view details.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Liquidity Chart Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                  <AreaChart className="h-5 w-5 text-blue-500" />
+                  <CardTitle>Liquidity Tracker</CardTitle>
+                </div>
+                <CardDescription>
+                  Monitor liquidity pool changes and set alerts for suspicious withdrawals
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={liquidityHistoricalData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="time"
+                        tickFormatter={(tick) => {
+                          const date = new Date(tick);
+                          return `${date.getHours()}:${date.getMinutes().toString().padStart(2, "0")}`;
+                        }}
+                      />
+                      <YAxis />
+                      <Tooltip
+                        formatter={(value) => [`$${formatNumber(value)}`, "Liquidity"]}
+                        labelFormatter={(label) => new Date(label).toLocaleString()}
+                      />
+                      <Line type="monotone" dataKey="liquidity" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 text-sm text-muted-foreground">
+                  <p>
+                    Liquidity to Market Cap Ratio:{" "}
+                    {tokenData.metrics.market_cap > 0
+                      ? (tokenData.metrics.liquidity / tokenData.metrics.market_cap).toFixed(2)
+                      : "N/A"}
+                  </p>
+                  <p className="text-red-500 mt-1">
+                    {tokenData.metrics.market_cap > 0 && tokenData.metrics.liquidity > tokenData.metrics.market_cap &&
+                      "⚠️ Warning: Liquidity exceeds market cap, potential for high volatility and manipulation"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Price Changes and Volume */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Percent className="h-5 w-5 text-red-500" />
+                    <CardTitle>Price Changes</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={priceChangeData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`${value}%`, "Change"]} />
+                        <Bar dataKey="value" fill="#f87171" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-green-500" />
+                    <CardTitle>Trading Volume</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={volumeData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`$${formatNumber(value)}`, "Volume"]} />
+                        <Bar dataKey="value" fill="#2563eb" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <CardDescription>
-              Monitor liquidity pool changes and set alerts for suspicious withdrawals
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={liquidityHistoricalData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="time"
-                    tickFormatter={(tick) => {
-                      const date = new Date(tick);
-                      return `${date.getHours()}:${date.getMinutes().toString().padStart(2, "0")}`;
-                    }}
-                  />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value) => [`$${formatNumber(value)}`, "Liquidity"]}
-                    labelFormatter={(label) => new Date(label).toLocaleString()}
-                  />
-                  <Line type="monotone" dataKey="liquidity" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-4 text-sm text-muted-foreground">
-              <p>
-                Liquidity to Market Cap Ratio:{" "}
-                {(tokenData.metrics.liquidity / tokenData.metrics.market_cap).toFixed(2)}
-              </p>
-              <p className="text-red-500 mt-1">
-                {tokenData.metrics.liquidity > tokenData.metrics.market_cap &&
-                  "⚠️ Warning: Liquidity exceeds market cap, potential for high volatility and manipulation"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Price Changes and Volume */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Percent className="h-5 w-5 text-red-500" />
-                <CardTitle>Price Changes</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={priceChangeData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [`${value}%`, "Change"]} />
-                    <Bar dataKey="value" fill="#f87171" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Search className="h-5 w-5 text-purple-500" />
+                    <CardTitle>AI Insights</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Check for New Structured Panel FIRST */}
+                  {(tokenData as any).ai_insights_panel ? (
+                    <div className="space-y-5">
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-green-500" />
-                <CardTitle>Trading Volume</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={volumeData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [`$${formatNumber(value)}`, "Volume"]} />
-                    <Bar dataKey="value" fill="#2563eb" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                      {/* 1. Liquidity Health */}
+                      <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border-l-4 border-blue-500">
+                        <h4 className="text-xs font-bold text-muted-foreground uppercase mb-1">Liquidity Health</h4>
+                        <p className="text-sm font-medium">{(tokenData as any).ai_insights_panel.liquidityHealth}</p>
+                      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
-                <CardTitle>Risk Analysis</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Alert variant="destructive" className="mb-4">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>High Risk Detected</AlertTitle>
-                <AlertDescription>
-                  This token has a risk score of {tokenData.risk?.risk_score ?? "N/A"}/100
-                </AlertDescription>
-              </Alert>
-              <div className="space-y-2">
-                <h4 className="font-medium">Vulnerabilities:</h4>
-                <ul className="space-y-1 list-disc pl-5">
-                  {tokenData.risk?.vulnerabilities?.length ? (
-                    tokenData.risk.vulnerabilities.map((item, index) => (
-                      <li key={index} className="text-sm text-red-500">{item}</li>
-                    ))
+                      {/* 2. Liquidity Trend & Exit Risk Row */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                          <h4 className="text-xs font-bold text-muted-foreground uppercase mb-1">Trend</h4>
+                          <p className="text-sm">{(tokenData as any).ai_insights_panel.liquidityTrend}</p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex flex-col items-center justify-center text-center">
+                          <h4 className="text-xs font-bold text-muted-foreground uppercase mb-1">Exit Risk</h4>
+                          <Badge
+                            variant="outline"
+                            className={`
+                                    ${(tokenData as any).ai_insights_panel.exitRiskSignal === 'HIGH' ? 'bg-red-100 text-red-700 border-red-200' : ''}
+                                    ${(tokenData as any).ai_insights_panel.exitRiskSignal === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : ''}
+                                    ${(tokenData as any).ai_insights_panel.exitRiskSignal === 'LOW' ? 'bg-green-100 text-green-700 border-green-200' : ''}
+                                `}
+                          >
+                            {(tokenData as any).ai_insights_panel.exitRiskSignal}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* 3. Investor Interpretation */}
+                      <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-100 dark:border-purple-800">
+                        <div className="flex items-center gap-2 mb-2 text-purple-700 dark:text-purple-300">
+                          <Activity className="h-4 w-4" />
+                          <h4 className="text-sm font-semibold">Investor Interpretation</h4>
+                        </div>
+                        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                          {(tokenData as any).ai_insights_panel.investorInterpretation}
+                        </p>
+                      </div>
+
+                    </div>
                   ) : (
-                    <p>No vulnerabilities found.</p>
+                    /* FALLBACK to old list if panel missing */
+                    <div className="space-y-4">
+                      {(tokenData as any).insights_list?.length ? (
+                        (tokenData as any).insights_list.map((insight: any, index: number) => (
+                          <div key={index} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
+                            <div className="flex items-start gap-3">
+                              <div className={`mt-1 ${insight.iconColor || "text-blue-500"}`}>
+                                <Activity className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-sm">{insight.title}</h4>
+                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                  {insight.description}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <p>Run a search to generate AI insights for this token.</p>
+                        </div>
+                      )}
+                    </div>
                   )}
-                </ul>
-              </div>
-              <Separator className="my-4" />
-              <div className="space-y-2">
-                <h4 className="font-medium">Recommendations:</h4>
-                <ul className="space-y-1 list-disc pl-5">
-                  {tokenData.recommendations?.length ? (
-                    tokenData.recommendations.map((item, index) => (
-                      <li key={index} className="text-sm">{item}</li>
-                    ))
-                  ) : (
-                    <p>No recommendations available.</p>
-                  )}
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Wallet className="h-5 w-5 text-blue-500" />
-                <CardTitle>Transaction Analysis</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[150px] mb-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={transactionsData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="value" name="Transactions" fill="#2563eb">
-                      {transactionsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={transactionColors[index % transactionColors.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                  <div className="text-sm text-muted-foreground">Buy/Sell Ratio</div>
-                  <div className="text-xl font-bold">
-                    {tokenData.metrics.transactions.h1.ratio.toFixed(2)}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-5 w-5 text-blue-500" />
+                    <CardTitle>Transaction Analysis</CardTitle>
                   </div>
-                  <Badge variant={tokenData.metrics.transactions.h1.ratio >= 1 ? "success" : "destructive"} className="mt-1">
-                    {tokenData.metrics.transactions.h1.ratio >= 1 ? "Bullish" : "Bearish"}
-                  </Badge>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                  <div className="text-sm text-muted-foreground">Recent Transactions</div>
-                  <div className="text-xl font-bold">
-                    {tokenData.metrics.transactions.h1.buys + tokenData.metrics.transactions.h1.sells}
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[150px] mb-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={transactionsData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="value" name="Transactions" fill="#2563eb">
+                          {transactionsData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={transactionColors[index % transactionColors.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-1">In the last hour</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* AI Insights */}
-        <Card>
-          <CardHeader>
-            <CardTitle>AI Insights</CardTitle>
-            <CardDescription>
-              Analysis generated by our AI based on token metrics and market behavior
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {tokenData.ai_insights?.length ? (
-                tokenData.ai_insights.map((insight, index) => (
-                  <div key={index} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <p className="whitespace-pre-line text-sm">{insight}</p>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-sm text-muted-foreground">Buy/Sell Ratio</div>
+                      <div className="text-xl font-bold">
+                        {tokenData.metrics.transactions.h1.ratio.toFixed(2)}
+                      </div>
+                      <Badge variant={tokenData.metrics.transactions.h1.ratio >= 1 ? "success" : "destructive"} className="mt-1">
+                        {tokenData.metrics.transactions.h1.ratio >= 1 ? "Bullish" : "Bearish"}
+                      </Badge>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                      <div className="text-sm text-muted-foreground">Recent Transactions</div>
+                      <div className="text-xl font-bold">
+                        {tokenData.metrics.transactions.h1.buys + tokenData.metrics.transactions.h1.sells}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">In the last hour</div>
+                    </div>
                   </div>
-                ))
-              ) : (
-                <p>No AI insights available.</p>
-              )}
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-          <CardFooter className="text-sm text-muted-foreground">
-            Updated based on latest blockchain data and market analysis
-          </CardFooter>
-        </Card>
+
+
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

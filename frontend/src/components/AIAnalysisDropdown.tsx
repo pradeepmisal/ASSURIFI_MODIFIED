@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { 
-  BrainCircuit, 
-  TrendingUp, 
-  AlertTriangle, 
-  Lightbulb, 
-  BarChart3, 
+import {
+  BrainCircuit,
+  TrendingUp,
+  AlertTriangle,
+  Lightbulb,
+  BarChart3,
   ChevronDown,
   Activity
 } from "lucide-react";
@@ -38,7 +38,7 @@ export function AIAnalysisDropdown() {
   // Create context-specific analyses based on current route
   const getPageSpecificData = (): Record<string, AnalysisItem> => {
     const path = location.pathname;
-    
+
     // Default analysis data (used for dashboard and other pages)
     const defaultData: Record<string, AnalysisItem> = {
       "market-analysis": {
@@ -158,7 +158,7 @@ export function AIAnalysisDropdown() {
         }
       };
     }
-    
+
     // Monitor (Liquidity) page specific data
     if (path.includes('monitor')) {
       return {
@@ -281,66 +281,6 @@ export function AIAnalysisDropdown() {
       };
     }
 
-    // Risk Analysis page specific data
-    if (path.includes('risk-analysis')) {
-      return {
-        "market-analysis": {
-          title: "Market Analysis",
-          icon: <TrendingUp className="h-5 w-5 text-blue-500" />,
-          items: [
-            "Risk-adjusted returns show 30% spread between high/low risk protocols",
-            "Market pricing in risk premiums more efficiently this quarter",
-            "Correlation between technical risks and token performance strengthening",
-            "DeFi blue chips maintaining lower risk profiles despite market conditions",
-            "Risk factor sensitivity increased across all major token categories"
-          ]
-        },
-        "risk-analysis": {
-          title: "Risk Analysis",
-          icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
-          items: [
-            "Smart contract risks account for 42% of total identified vulnerabilities",
-            "Economic attack vectors increasing in sophistication and occurrence",
-            "Centralization risks present in 78% of governance structures",
-            "Slippage and MEV risks affecting trade execution by avg. 3.2%",
-            "Systemic contagion paths identified across 15 major protocols"
-          ]
-        },
-        "prediction": {
-          title: "Prediction",
-          icon: <Lightbulb className="h-5 w-5 text-purple-500" />,
-          items: [
-            "Risk model sophistication expected to improve by 40% over 6 months",
-            "Insurance product expansion to cover 70% more risk categories",
-            "Institutional risk frameworks being adapted for DeFi integration",
-            "Proactive risk monitoring to become industry standard by Q4",
-            "Risk specialization creating new expert niches in protocol security"
-          ]
-        },
-        "opportunities": {
-          title: "Opportunities",
-          icon: <BarChart3 className="h-5 w-5 text-green-500" />,
-          items: [
-            "Implement comprehensive risk scoring across portfolio holdings",
-            "Leverage risk/reward optimization tools for capital allocation",
-            "Formal verification services seeing 3x growth in adoption",
-            "Risk-transfer mechanisms (insurance, options) creating new markets",
-            "Risk transparency becoming competitive differentiator for protocols"
-          ]
-        },
-        "key-metrics": {
-          title: "Key Metrics",
-          icon: <Activity className="h-5 w-5 text-pink-500" />,
-          items: [
-            "Average Risk Score: 65/100 (higher = more risk)",
-            "Risk Categories: Technical (40%), Economic (30%), Governance (20%), Market (10%)",
-            "Risk-adjusted ROI spread: 28.5% between top and bottom quartiles",
-            "Vulnerability discovery rate: 2.8 per 1000 lines of code (industry avg)",
-            "Risk hedging cost: 3-8% annualized for comprehensive coverage"
-          ]
-        }
-      };
-    }
 
     // Sentiment Analysis page specific data
     if (path.includes('sentiment')) {

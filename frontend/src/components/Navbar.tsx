@@ -1,187 +1,63 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, ChevronRight, Shield, BarChart2, MessageSquare, Sun, Moon } from 'lucide-react';
+import { Shield } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const Navbar: React.FC = () => {
+  const { isAuthenticated, user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [dark, setDark] = useState(() =>
-    typeof window !== 'undefined' ? document.documentElement.classList.contains('dark') : false
-  );
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Sync with system & localStorage
-  useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [dark]);
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') setDark(true);
-    if (saved === 'light') setDark(false);
-  }, []);
-
   return (
-    <nav 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 md:px-12 py-4
-        ${isScrolled ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-sm' : 'bg-transparent'}
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 md:px-12 py-5
+        ${isScrolled ? 'bg-slate-950/95 backdrop-blur-md border-b border-slate-800/50' : 'bg-slate-950/60 backdrop-blur-sm'}
       `}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link 
-          to="/" 
-          className="flex items-center space-x-2 text-2xl font-bold text-brand hover:text-brand-light transition-colors"
+        <Link
+          to="/"
+          className="flex items-center space-x-2 text-2xl font-bold text-white hover:text-blue-400 transition-colors"
         >
           <Shield className="h-8 w-8" />
           <span className="font-display">AssureFi</span>
         </Link>
-        
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-8">
-          <Link to="/" className="text-foreground/80 hover:text-brand transition-colors font-medium">Home</Link>
-          <div className="relative group">
-            <button className="text-foreground/80 hover:text-brand transition-colors font-medium flex items-center">
-              Features <ChevronRight className="h-4 w-4 ml-1 group-hover:rotate-90 transition-transform" />
-            </button>
-            <div className="absolute z-10 left-0 mt-2 w-64 origin-top-left rounded-md shadow-lg overflow-hidden scale-95 opacity-0 invisible group-hover:scale-100 group-hover:opacity-100 group-hover:visible transition-all duration-200 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <div className="p-2 space-y-1">
-                <Link to="/audit" className="flex items-center p-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                  <Shield className="h-5 w-5 mr-3 text-defi-blue" />
-                  <div>
-                    <p className="font-medium">Contract Analysis</p>
-                    <p className="text-sm text-foreground/60">Detect vulnerabilities in smart contracts</p>
-                  </div>
-                </Link>
-                <Link to="/monitor" className="flex items-center p-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                  <BarChart2 className="h-5 w-5 mr-3 text-defi-teal" />
-                  <div>
-                    <p className="font-medium">Liquidity Monitoring</p>
-                    <p className="text-sm text-foreground/60">Track liquidity changes in real-time</p>
-                  </div>
-                </Link>
-                <Link to="/sentiment-analysis" className="flex items-center p-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                  <MessageSquare className="h-5 w-5 mr-3 text-defi-purple" />
-                  <div>
-                    <p className="font-medium">Sentiment Analysis</p>
-                    <p className="text-sm text-foreground/60">Gauge social sentiment around tokens</p>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          </div>
-          <Link to="/about" className="text-foreground/80 hover:text-brand transition-colors font-medium">About</Link>
-        </div>
-        
-        {/* Dark Mode Toggle (always shown) */}
-        <div className="flex items-center space-x-2">
-          <button
-            className="rounded-full p-2 outline-none border border-transparent focus:ring-2 focus:ring-blue-400 bg-white/5 hover:bg-blue-400/10 transition"
-            aria-label="Toggle dark mode"
-            onClick={() => setDark((d) => !d)}
-            title="Toggle dark mode"
-          >
-            {dark ? <Sun className="h-5 w-5 text-yellow-300" /> : <Moon className="h-5 w-5 text-blue-300" />}
-          </button>
-        </div>
-        
-        <div className="hidden md:flex items-center space-x-4">
-          <Link 
-            to="/audit" 
-            className="px-5 py-2 rounded-full bg-brand hover:bg-brand-dark text-white font-medium transition-colors"
-          >
-            Launch App
-          </Link>
-        </div>
-        
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden text-foreground p-1"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
-      
-      {/* Mobile Navigation */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden absolute left-0 right-0 top-[72px] bg-white dark:bg-gray-900 shadow-lg border-t border-gray-200 dark:border-gray-800 fade-in">
-          <div className="p-4 space-y-3">
-            <Link 
-              to="/" 
-              className="block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <div className="border-t border-gray-200 dark:border-gray-800 my-2"></div>
-            <div className="p-3">
-              <p className="font-medium text-foreground/60 text-sm mb-2">Features</p>
-              <div className="space-y-2 ml-2">
-                <Link 
-                  to="/audit" 
-                  className="block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Contract Analysis
-                </Link>
-                <Link 
-                  to="/liquidity-monitor" 
-                  className="block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Liquidity Monitoring
-                </Link>
-                <Link 
-                  to="/sentiment-analysis" 
-                  className="block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Sentiment Analysis
-                </Link>
-              </div>
-            </div>
-            <Link 
-              to="/about" 
-              className="block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <div className="border-t border-gray-200 dark:border-gray-800 my-2"></div>
-            <Link 
-              to="/dashboard" 
-              className="block text-center p-3 rounded-lg bg-brand hover:bg-brand-dark text-white font-medium transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Launch App
-            </Link>
-            <div className="mt-4 flex justify-end">
+
+        {/* Right side - Login/Logout */}
+        <div className="flex items-center gap-4">
+          {isAuthenticated ? (
+            <>
+              <span className="text-sm font-medium text-slate-400 hidden sm:block">
+                Hello, <span className="text-white">{user?.username}</span>
+              </span>
               <button
-                className="rounded-full p-2 outline-none border border-transparent focus:ring-2 focus:ring-blue-400 bg-white/5 hover:bg-blue-400/10 transition"
-                aria-label="Toggle dark mode"
-                onClick={() => setDark((d) => !d)}
-                title="Toggle dark mode"
+                onClick={logout}
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-800 hover:bg-red-600 rounded-lg transition-all duration-200"
               >
-                {dark ? <Sun className="h-5 w-5 text-yellow-300" /> : <Moon className="h-5 w-5 text-blue-300" />}
+                Logout
               </button>
-            </div>
-          </div>
+            </>
+          ) : (
+            <Link to="/login">
+              <Button
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg shadow-lg shadow-blue-500/30"
+              >
+                Login
+              </Button>
+            </Link>
+          )}
         </div>
-      )}
+      </div>
     </nav>
   );
 };

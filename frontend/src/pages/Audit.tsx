@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import SearchBar from "@/components/SearchBar";
+import { API_BASE_URL } from "@/config";
 
 interface VulnerabilityItem {
   id: number;
@@ -47,10 +48,12 @@ const Audit = () => {
   const [progressValue, setProgressValue] = useState(0);
   const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityItem[]>([]);
   const [summary, setSummary] = useState("");
+  const [investorImpactSummary, setInvestorImpactSummary] = useState("");
   const [isDark, setIsDark] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
+    // ... (theme existing logic)
     // Load theme from localStorage
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -76,7 +79,7 @@ const Audit = () => {
   };
 
   // Backend API endpoint for contract audit
-  const AUDIT_API_URL = "http://localhost:3002/analyze-contract";
+  const AUDIT_API_URL = `${API_BASE_URL}/analyze-contract`;
 
   // Ref for file input (hidden)
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -116,6 +119,21 @@ const Audit = () => {
       });
       return;
     }
+
+    // Validate Ethereum address format
+    if (activeTab === "address" && contractAddress) {
+      const trimmedAddress = contractAddress.trim();
+      const isValidAddress = /^0x[0-9a-fA-F]{40}$/.test(trimmedAddress);
+      if (!isValidAddress) {
+        toast({
+          title: "Invalid Address Format",
+          description: `Ethereum address must be 42 characters (0x followed by 40 hex characters). Current length: ${trimmedAddress.length}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     if (activeTab === "source" && !sourceCode) {
       toast({
         title: "Input Required",
@@ -130,6 +148,7 @@ const Audit = () => {
     setAuditComplete(false);
     setVulnerabilities([]);
     setSummary("");
+    setInvestorImpactSummary("");
     setAuditScore(0);
 
     try {
@@ -145,36 +164,55 @@ const Audit = () => {
         });
       }, 200);
 
+      const token = localStorage.getItem("token");
+      const headers: any = {};
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       let response;
       if (activeTab === "address") {
         // GET request with contract address in header
+        const trimmedAddress = contractAddress.trim();
+        headers["contract-address"] = trimmedAddress;
+
         response = await fetch(AUDIT_API_URL, {
           method: "GET",
-          headers: {
-            "contract-address": contractAddress,
-          },
+          headers: headers,
         });
       } else if (activeTab === "source") {
         // POST request: send a JSON object with the source code
+        headers["Content-Type"] = "application/json";
+
         response = await fetch(AUDIT_API_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: headers,
           body: JSON.stringify({ code: sourceCode }),
         });
       }
 
       if (!response || !response.ok) {
         console.error("Audit backend fetch error", response);
-        throw new Error("Server responded with an error");
+        // Try to get error message from response
+        let errorMessage = "Server responded with an error";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || `HTTP ${response.status} error`;
+        }
+        throw new Error(errorMessage);
       }
       const data = await response.json();
+
       // Expected response structure:
-      // { vulnerabilities: [...], overallScore: number, summary: string }
+      // { vulnerabilities: [...], overallScore: number, summary: string, investorImpactSummary: string }
       setVulnerabilities(data.vulnerabilities || []);
       setAuditScore(data.overallScore || 0);
       setSummary(data.summary || "");
+      setInvestorImpactSummary(data.investorImpactSummary || "");
 
       setProgressValue(100);
       setAuditComplete(true);
@@ -366,28 +404,26 @@ const Audit = () => {
                     <div className="border border-white/15 rounded-lg p-4">
                       <div className="flex justify-between items-center mb-2">
                         <h3 className="font-medium text-white">Security Score</h3>
-                        <div className={`px-2 py-1 text-sm font-medium rounded-full ${
-                          auditScore >= 80 ? "bg-green-400/10 text-green-200" :
+                        <div className={`px-2 py-1 text-sm font-medium rounded-full ${auditScore >= 80 ? "bg-green-400/10 text-green-200" :
                           auditScore >= 60 ? "bg-yellow-400/10 text-yellow-200" :
-                          "bg-red-400/10 text-red-200"
-                        }`}>
+                            "bg-red-400/10 text-red-200"
+                          }`}>
                           {getScoreLabel(auditScore)}
                         </div>
                       </div>
                       <Progress
                         value={auditScore}
-                        className={`h-2 mb-2 bg-white/5 [&>div]:${
-                          auditScore >= 80 ? "bg-green-400/80" :
+                        className={`h-2 mb-2 bg-white/5 [&>div]:${auditScore >= 80 ? "bg-green-400/80" :
                           auditScore >= 60 ? "bg-yellow-300/70" :
-                          "bg-red-700/80"
-                        }`}
+                            "bg-red-700/80"
+                          }`}
                       />
                       <p className="text-sm text-gray-300">
                         {auditScore >= 80
                           ? "This contract appears to be relatively secure with minor issues."
                           : auditScore >= 60
-                          ? "This contract has security concerns that should be addressed."
-                          : "This contract has critical vulnerabilities that must be fixed."}
+                            ? "This contract has security concerns that should be addressed."
+                            : "This contract has critical vulnerabilities that must be fixed."}
                       </p>
                     </div>
 
@@ -410,12 +446,11 @@ const Audit = () => {
                                     {item.severity === "low" && <HelpCircle className="h-5 w-5 text-blue-400" />}
                                     <h4 className="font-medium text-white">{item.name}</h4>
                                   </div>
-                                  <div className={`text-xs font-medium px-2 py-1 rounded-full uppercase ${
-                                    item.severity === "critical" ? "bg-red-400/10 text-red-200" :
+                                  <div className={`text-xs font-medium px-2 py-1 rounded-full uppercase ${item.severity === "critical" ? "bg-red-400/10 text-red-200" :
                                     item.severity === "high" ? "bg-orange-400/10 text-orange-200" :
-                                    item.severity === "medium" ? "bg-yellow-400/10 text-yellow-200" :
-                                    "bg-blue-400/10 text-blue-200"
-                                  }`}>
+                                      item.severity === "medium" ? "bg-yellow-400/10 text-yellow-200" :
+                                        "bg-blue-400/10 text-blue-200"
+                                    }`}>
                                     {item.severity}
                                   </div>
                                 </div>
@@ -465,9 +500,22 @@ const Audit = () => {
 
                     {/* Summary Section */}
                     {summary && (
-                      <div className="border border-white/10 rounded-lg p-4 bg-white/5 backdrop-blur-md">
+                      <div className="border border-white/10 rounded-lg p-4 bg-white/5 backdrop-blur-md mb-4">
                         <h3 className="font-medium mb-2 text-white">Audit Summary</h3>
                         <p className="text-sm text-gray-200">{summary}</p>
+                      </div>
+                    )}
+
+                    {/* Investor Impact Summary - NEW */}
+                    {investorImpactSummary && (
+                      <div className="border border-blue-500/20 rounded-lg p-4 bg-blue-500/5 backdrop-blur-md">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Shield className="h-5 w-5 text-blue-400" />
+                          <h3 className="font-medium text-white">Investor Impact Analysis</h3>
+                        </div>
+                        <p className="text-sm text-blue-100/90 leading-relaxed font-medium">
+                          {investorImpactSummary}
+                        </p>
                       </div>
                     )}
                   </div>

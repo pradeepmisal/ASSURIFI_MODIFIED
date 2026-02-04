@@ -17,99 +17,47 @@ const Footer: React.FC = () => {
               AssureFi combines smart contract analysis, liquidity monitoring, and social media sentiment to provide the most comprehensive risk assessment tool in DeFi.
             </p>
             <div className="flex space-x-4">
-              <a 
-                href="https://github.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <a
+                href="#"
                 className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-foreground/70 hover:bg-brand hover:text-white transition-colors"
+                aria-label="Github"
               >
                 <Github className="h-5 w-5" />
               </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <a
+                href="#"
                 className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-foreground/70 hover:bg-brand hover:text-white transition-colors"
+                aria-label="Twitter"
               >
                 <Twitter className="h-5 w-5" />
               </a>
             </div>
           </div>
-          
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Features</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/contract-analyzer" className="text-foreground/70 hover:text-brand transition-colors">
-                  Contract Analysis
-                </Link>
-              </li>
-              <li>
-                <Link to="/monitor" className="text-foreground/70 hover:text-brand transition-colors">
-                  Liquidity Monitoring
-                </Link>
-              </li>
-              <li>
-                <Link to="/sentiment-analysis" className="text-foreground/70 hover:text-brand transition-colors">
-                  Sentiment Analysis
-                </Link>
-              </li>
-              <li>
-                <Link to="/dashboard" className="text-foreground/70 hover:text-brand transition-colors">
-                  Risk Dashboard
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Company</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/about" className="text-foreground/70 hover:text-brand transition-colors">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/careers" className="text-foreground/70 hover:text-brand transition-colors">
-                  Careers
-                </Link>
-              </li>
-              <li>
-                <Link to="/blog" className="text-foreground/70 hover:text-brand transition-colors">
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-foreground/70 hover:text-brand transition-colors">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold text-lg mb-4">Legal</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/terms" className="text-foreground/70 hover:text-brand transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="text-foreground/70 hover:text-brand transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/disclaimer" className="text-foreground/70 hover:text-brand transition-colors">
-                  Disclaimer
-                </Link>
-              </li>
-            </ul>
+
+          <div className="md:col-span-3 flex justify-end">
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Platform Features</h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link to="/audit" className="text-foreground/70 hover:text-brand transition-colors">
+                    Smart Contract Audit
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/monitor" className="text-foreground/70 hover:text-brand transition-colors">
+                    Liquidity Monitor
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/sentiment-analysis" className="text-foreground/70 hover:text-brand transition-colors">
+                    Sentiment Analysis
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-200 dark:border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-foreground/60 text-sm mb-4 md:mb-0">
             &copy; {new Date().getFullYear()} AssureFi. All rights reserved.

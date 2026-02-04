@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/config";
 
 interface SearchBarProps {
   onCoinSelect?: (address: string) => void;
@@ -27,7 +28,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onCoinSelect }) => {
       setLoading(true);
       try {
         // Call your new backend endpoint instead of CoinGecko directly
-        const response = await fetch(`http://localhost:3002/api/search?name=${query}`);
+        const response = await fetch(`${API_BASE_URL}/search?name=${query}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -64,7 +65,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onCoinSelect }) => {
     setShowSuggestions(false);
     // If there's a query and first suggestion has address, select it
     if (query && suggestions.length > 0 && onCoinSelect && suggestions[0].contract_address) {
-        onCoinSelect(suggestions[0].contract_address);
+      onCoinSelect(suggestions[0].contract_address);
     }
   };
 
