@@ -58,7 +58,26 @@ class SearchService {
 
     // Kept for backward compatibility if any other controller uses it directly
     static async searchDexScreener(query) {
-        return SearchService.searchTokens(query);
+        try {
+            if (!query) throw new Error("Missing 'q' query parameter");
+
+            const url = `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`;
+            const response = await fetch(url);
+
+            if (!response.ok) return [];
+
+            const data = await response.json();
+            const pairs = data.pairs || [];
+
+            // FOR MONITOR: Return FULL PAIR OBJECTS without chain filter.
+            // Monitor shows market data (price/volume) which works for all chains.
+            // Only Audit needs the Ethereum filter (for Etherscan source code).
+            return pairs.slice(0, 20); // Limit to 20 for performance
+
+        } catch (error) {
+            console.error("Error fetching from DexScreener (Monitor):", error);
+            return [];
+        }
     }
 }
 
