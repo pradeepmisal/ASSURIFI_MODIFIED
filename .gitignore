@@ -4,3 +4,12 @@ dist/
 build/
 .DS_Store
 *.log
+test_*.js
+bun.lockb
+vite.config.ts.timestamp-*.mjs
+*.txt
+*.json
+!package.json
+!tsconfig.json
+!components.json
+
