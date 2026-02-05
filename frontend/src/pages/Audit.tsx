@@ -285,7 +285,12 @@ const Audit = () => {
 
                     <TabsContent value="address" className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="contractAddress" className="text-gray-200">Enter Contract Address</Label>
+                        <Label htmlFor="contractAddress" className="text-gray-200 flex justify-between">
+                          Enter Contract Address
+                          <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full border border-blue-400/20">
+                            Supported: Ethereum (ERC-20)
+                          </span>
+                        </Label>
                         <div className="relative">
                           <Input
                             id="contractAddress"
