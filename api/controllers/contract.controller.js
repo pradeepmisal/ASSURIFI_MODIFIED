@@ -30,6 +30,22 @@ class ContractController {
 
             return res.json(analysis);
         } catch (error) {
+            // Handle "No verified source code" gracefully
+            if (error.message.includes("No verified source code")) {
+                return res.json({
+                    overallScore: 20, // Low score for unverified
+                    summary: "⚠️ ANALYSIS FAILED: Contract is Unverified.",
+                    investorImpactSummary: "The developer has hidden the source code of this contract. This is a major red flag. Without verified code, we cannot check for scams, honeypots, or backdoors. Your funds are at high risk.",
+                    vulnerabilities: [{
+                        id: 1,
+                        name: "Unverified Source Code",
+                        severity: "critical",
+                        description: "The contract source code has not been verified on Etherscan. We cannot analyze hidden code.",
+                        recommendation: "Avoid this token unless you completely trust the developer. Rugpull risk is extremely high."
+                    }]
+                });
+            }
+
             console.error("Request error:", error);
             return res.status(500).json({ error: error.message || "Failed to analyze smart contract" });
         }

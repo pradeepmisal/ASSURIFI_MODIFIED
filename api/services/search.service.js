@@ -1,6 +1,5 @@
 // Simple in-memory cache
 const searchCache = new Map();
-const detailsCache = new Map();
 
 class SearchService {
     static async searchTokens(name) {
@@ -30,7 +29,9 @@ class SearchService {
             const uniqueTokens = new Map();
 
             for (const pair of pairs) {
-                if (pair.baseToken && pair.baseToken.address) {
+                // FILTER: Only allow Ethereum tokens because our Auditor currently only supports Etherscan.
+                // This fulfills user request to "Show only those coins... which can be audit".
+                if (pair.chainId === 'ethereum' && pair.baseToken && pair.baseToken.address) {
                     const addr = pair.baseToken.address;
                     if (!uniqueTokens.has(addr)) {
                         uniqueTokens.set(addr, {
@@ -50,32 +51,14 @@ class SearchService {
 
         } catch (error) {
             console.error("Error fetching from DexScreener (Search):", error);
+            // If completely failed, empty array instead of crash
             return [];
         }
     }
 
+    // Kept for backward compatibility if any other controller uses it directly
     static async searchDexScreener(query) {
-        try {
-            if (!query) {
-                throw new Error("Missing 'q' query parameter");
-            }
-
-            const url = `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`;
-            // DexScreener doesn't require an API key for public search
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`DexScreener API error: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            // Return pairs directly
-            return data.pairs || [];
-
-        } catch (error) {
-            console.error("Error fetching from DexScreener:", error);
-            return [];
-        }
+        return SearchService.searchTokens(query);
     }
 }
 
