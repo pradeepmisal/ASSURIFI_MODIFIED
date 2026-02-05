@@ -1,85 +1,195 @@
+<div align="center">
+
 [![Hackathon Win](https://i.postimg.cc/cHchLV3h/Black-Technology-Linked-In-Banner-1.png)](https://openservai.hackerearth.com/)
 
-# Project Setup
+# 🛡️ AssureFi
 
-This project uses [Vite](https://vitejs.dev/) for fast development and hot module replacement. This guide explains how to clone the repository, install dependencies, and run the project on `localhost:3000`.
+### AI-Powered DeFi Security Intelligence Platform
+
+**Protect Your Crypto Investments with Real-Time Smart Contract Auditing, Liquidity Risk Detection, and Market Sentiment Analysis**
+
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-assurefi.app-blue?style=for-the-badge)](https://assurefi.app)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Gemini AI](https://img.shields.io/badge/Gemini-AI-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
+
+</div>
+
+---
+
+## 🚀 Live Demo
+
+**👉 Try it now: [https://assurefi.app](https://assurefi.app)**
+
 ![Project Screenshot](https://media-hosting.imagekit.io/93ee9410feef466c/WhatsApp%20Image%202025-04-06%20at%2001.25.53_79b24236.jpg?Expires=1839297377&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=vlhMwfMeoV0WkchlMKL8Kay2M48EyKSpHpyL9QehZxHMno40wtqafWcjd~nNt9vnuXWiA0V~mX5giYjqhO04RQs2OLkrt1Lmxv-xB9NYxU-P~Z36PD3Pp3HQ~oULbqtMZbX4Otwfb6EY0tC0LWf9iVyG5TB2JcXM2h0n39mfd1iiPYR0HN6faRAbV90Eb~R7HHJycWWHyvUx1vmV-CIptGeI~MSt6m97pSDhH8Wkp2UTYcxCRMn9M~Xym4hPt8o1rrefOlW3k6mjWR3G2R8pmp83EE7n4C1jkW0inM12DZW3J~0MOPNVserrgP-~HFCqvPsJooiIOp4LP4mu-SiZHw__)
 
-## Prerequisites
+---
 
-- **Git** – for cloning the repository.
-- **Node.js** (v16 or later) and **npm** – for managing packages and running scripts.
+## 🎯 What is AssureFi?
 
-## Cloning the Repository
+AssureFi is an **enterprise-grade security platform** designed to protect cryptocurrency investors from smart contract vulnerabilities, rug pulls, and market manipulation.
 
-Clone the repository using Git:
+> In 2024 alone, over **$1.8 billion** was lost to DeFi exploits and scams. AssureFi aims to change that.
 
-```sh
-git clone https://github.com/AshKatale/assure-fi.git
-cd frontend
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔍 **Smart Contract Audit** | AI-powered vulnerability detection using Google Gemini. Analyzes Solidity code for security flaws, honeypots, and backdoors. |
+| 📊 **Liquidity Monitor** | Real-time tracking of token liquidity, volume, and price movements. Detects potential exit scam patterns. |
+| 💬 **Sentiment Analysis** | AI-driven market sentiment analysis from news and social media. Understand market mood before investing. |
+| 🔐 **User Authentication** | Secure JWT-based authentication with encrypted sessions. |
+| 📈 **Risk Scoring** | Comprehensive risk assessment with investor-friendly explanations. |
+
+---
+
+## 🏗️ Tech Stack
+
+<div align="center">
+
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend** | React 18, TypeScript, TailwindCSS, Framer Motion, Recharts |
+| **Backend** | Node.js, Express.js, JWT Authentication |
+| **AI/ML** | Google Gemini API, Groq (Fallback) |
+| **APIs** | DexScreener, Etherscan, CryptoCompare |
+| **Deployment** | Vercel (Frontend), Render (Backend) |
+| **Domain** | Custom domain via Name.com |
+
+</div>
+
+---
+
+## 🛠️ Installation & Setup
+
+### Prerequisites
+
+- **Node.js** v18+ 
+- **npm** or **yarn**
+- **Git**
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/pradeepmisal/ASSURIFI_MODIFIED.git
+cd ASSURIFI_MODIFIED
 ```
 
-## Installing Dependencies
+### 2. Backend Setup
 
-Install all necessary packages by running:
-
-```sh
+```bash
+# Install backend dependencies
 npm install
+
+# Create .env file with your API keys
+cp .env.example .env
+
+# Start backend server
+npm run dev
 ```
 
-## Running the Development Server on Port 3000
+### 3. Frontend Setup
 
-By default, Vite runs on port `5173`. To run the development server on port `3000`, you have two options:
+```bash
+cd frontend
 
-### Option 1: Using the CLI
+# Install frontend dependencies
+npm install
 
-Run the development server and specify the port:
-
-```sh
-npm run dev -- --port 3000
+# Start frontend dev server
+npm run dev
 ```
 
-### Option 2: Updating the Vite Config
+### 4. Access the Application
 
-Modify (or create) the `vite.config.js` file at the root of your project to include a custom server configuration:
+- **Frontend:** http://localhost:5173
+- **Backend:** http://localhost:3002
 
-```js
-import { defineConfig } from 'vite';
+---
 
-export default defineConfig({
-  server: {
-    port: 3000,
-    strictPort: true, // Ensures Vite exits if port 3000 is not available
-  },
-});
+## 🔑 Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+PORT=3002
+JWT_SECRET=your_jwt_secret
+GEMINI_API_KEY=your_gemini_api_key
+ETHERSCAN_API_KEY=your_etherscan_api_key
+GROQ_API_KEY=your_groq_api_key
 ```
 
-After starting the server, open your browser and visit:
+---
+
+## 📁 Project Structure
 
 ```
-http://localhost:3000
+ASSURIFI/
+├── api/
+│   ├── controllers/      # Route handlers
+│   ├── services/         # Business logic
+│   ├── routes/           # API routes
+│   └── server.js         # Express server
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # Reusable UI components
+│   │   ├── pages/        # Page components
+│   │   ├── context/      # React context providers
+│   │   └── hooks/        # Custom React hooks
+│   └── vite.config.ts    # Vite configuration
+└── README.md
 ```
 
-## Building and Previewing for Production
+---
 
-To build the production version of the project:
+## 🚀 Deployment
 
-```sh
-npm run build
+### Frontend (Vercel)
+```bash
+vercel --prod
 ```
 
-To preview the production build locally:
+### Backend (Render)
+- Connect GitHub repo to Render
+- Set environment variables in Render dashboard
+- Deploy automatically on push
 
-```sh
-npm run preview
-```
+---
 
-## Troubleshooting
+## 🤝 Contributing
 
-- **Node.js Installation:** Ensure you have the correct version of Node.js installed.
-- **Port Availability:** Verify that port 3000 is free; if not, try stopping the service using it or choose a different port.
-- **Reinstalling Modules:** If you run into issues, try deleting `node_modules` and `package-lock.json`, then run `npm install` again.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-This project is licensed under the MIT License.
+---
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👨‍💻 Author
+
+**Pradeep Misal**
+
+- GitHub: [@pradeepmisal](https://github.com/pradeepmisal)
+- LinkedIn: [Connect with me](https://linkedin.com/in/pradeepmisal)
+
+---
+
+<div align="center">
+
+**⭐ Star this repo if you found it helpful!**
+
+Made with ❤️ for the DeFi community
+
+</div>
