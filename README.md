@@ -1,85 +1,78 @@
+<div align="center">
+
 [![Hackathon Win](https://i.postimg.cc/cHchLV3h/Black-Technology-Linked-In-Banner-1.png)](https://openservai.hackerearth.com/)
 
-# Project Setup
+# 🛡️ AssureFi
 
-This project uses [Vite](https://vitejs.dev/) for fast development and hot module replacement. This guide explains how to clone the repository, install dependencies, and run the project on `localhost:3000`.
-![Project Screenshot](https://media-hosting.imagekit.io/93ee9410feef466c/WhatsApp%20Image%202025-04-06%20at%2001.25.53_79b24236.jpg?Expires=1839297377&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=vlhMwfMeoV0WkchlMKL8Kay2M48EyKSpHpyL9QehZxHMno40wtqafWcjd~nNt9vnuXWiA0V~mX5giYjqhO04RQs2OLkrt1Lmxv-xB9NYxU-P~Z36PD3Pp3HQ~oULbqtMZbX4Otwfb6EY0tC0LWf9iVyG5TB2JcXM2h0n39mfd1iiPYR0HN6faRAbV90Eb~R7HHJycWWHyvUx1vmV-CIptGeI~MSt6m97pSDhH8Wkp2UTYcxCRMn9M~Xym4hPt8o1rrefOlW3k6mjWR3G2R8pmp83EE7n4C1jkW0inM12DZW3J~0MOPNVserrgP-~HFCqvPsJooiIOp4LP4mu-SiZHw__)
+### AI-Powered DeFi Security Intelligence Platform
 
-## Prerequisites
+**Protect Your Crypto Investments with Real-Time Smart Contract Auditing, Liquidity Risk Detection, and Market Sentiment Analysis**
 
-- **Git** – for cloning the repository.
-- **Node.js** (v16 or later) and **npm** – for managing packages and running scripts.
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-assurefi.app-blue?style=for-the-badge)](https://assurefi.app)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Gemini AI](https://img.shields.io/badge/Gemini-AI-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
 
-## Cloning the Repository
+</div>
 
-Clone the repository using Git:
+---
 
-```sh
-git clone https://github.com/AshKatale/assure-fi.git
-cd frontend
-```
+## 🚀 Live Demo
 
-## Installing Dependencies
+**👉 Try it now: [https://assurefi.app](https://assurefi.app)**
 
-Install all necessary packages by running:
 
-```sh
-npm install
-```
 
-## Running the Development Server on Port 3000
+---
 
-By default, Vite runs on port `5173`. To run the development server on port `3000`, you have two options:
+## 🎯 What is AssureFi?
 
-### Option 1: Using the CLI
+AssureFi is an **enterprise-grade security platform** designed to protect cryptocurrency investors from smart contract vulnerabilities, rug pulls, and market manipulation.
 
-Run the development server and specify the port:
+> In 2024 alone, over **$1.8 billion** was lost to DeFi exploits and scams. AssureFi aims to change that.
 
-```sh
-npm run dev -- --port 3000
-```
+---
 
-### Option 2: Updating the Vite Config
+## ✨ Key Features
 
-Modify (or create) the `vite.config.js` file at the root of your project to include a custom server configuration:
+| Feature | Description |
+|---------|-------------|
+| 🔍 **Smart Contract Audit** | AI-powered vulnerability detection using Google Gemini. Analyzes Solidity code for security flaws, honeypots, and backdoors. |
+| 📊 **Liquidity Monitor** | Real-time tracking of token liquidity, volume, and price movements. Detects potential exit scam patterns. |
+| 💬 **Sentiment Analysis** | AI-driven market sentiment analysis from news and social media. Understand market mood before investing. |
+| 🔐 **User Authentication** | Secure JWT-based authentication with encrypted sessions. |
+| 📈 **Risk Scoring** | Comprehensive risk assessment with investor-friendly explanations. |
 
-```js
-import { defineConfig } from 'vite';
+---
 
-export default defineConfig({
-  server: {
-    port: 3000,
-    strictPort: true, // Ensures Vite exits if port 3000 is not available
-  },
-});
-```
+## 🏗️ Tech Stack
 
-After starting the server, open your browser and visit:
+<div align="center">
 
-```
-http://localhost:3000
-```
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend** | React 18, TypeScript, TailwindCSS, Framer Motion, Recharts |
+| **Backend** | Node.js, Express.js, JWT Authentication |
+| **AI/ML** | Google Gemini API, Groq (Fallback) |
+| **APIs** | DexScreener, Etherscan, CryptoCompare |
+| **Deployment** | Vercel (Frontend), Render (Backend) |
+| **Domain** | Custom domain via Name.com |
 
-## Building and Previewing for Production
+</div>
 
-To build the production version of the project:
+---
 
-```sh
-npm run build
-```
+## 🛠️ Installation & Setup
 
-To preview the production build locally:
+### Prerequisites
 
-```sh
-npm run preview
-```
+- **Node.js** v18+ 
+- **npm** or **yarn**
+- **Git**
 
-## Troubleshooting
+### 1. Clone the Repository
 
-- **Node.js Installation:** Ensure you have the correct version of Node.js installed.
-- **Port Availability:** Verify that port 3000 is free; if not, try stopping the service using it or choose a different port.
-- **Reinstalling Modules:** If you run into issues, try deleting `node_modules` and `package-lock.json`, then run `npm install` again.
-
-## License
-
-This project is licensed under the MIT License.
+```bash
+git clone [https://github.com/pradeepmisal/ASSURIFI_MODIFIED.git](https://github.com/pradeepmisal/ASSURIFI_MODIFIED.git)
+cd ASSURIFI_MODIFIED
