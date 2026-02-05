@@ -38,6 +38,7 @@ import {
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { tokenData as defaultTokenData } from "@/data/liquidityData";
+import { API_BASE_URL } from "@/config";
 
 
 
@@ -86,7 +87,7 @@ const Monitor = () => {
       try {
         // Use our backend proxy to avoid CORS issues if calling direct, 
         // but here we use the proxy we created: /search/dex
-        const response = await fetch(`http://localhost:3002/search/dex?q=${encodeURIComponent(searchQuery)}`);
+        const response = await fetch(`${API_BASE_URL}/search/dex?q=${encodeURIComponent(searchQuery)}`);
         if (response.ok) {
           const data = await response.json();
           // Limit suggestions to top 5 for cleaner UI
@@ -119,7 +120,7 @@ const Monitor = () => {
       // Case 3: Fallback manual search if nothing in list
       setIsSearching(true);
       try {
-        const response = await fetch(`http://localhost:3002/search/dex?q=${encodeURIComponent(searchQuery)}`);
+        const response = await fetch(`${API_BASE_URL}/search/dex?q=${encodeURIComponent(searchQuery)}`);
         if (response.ok) {
           const data = await response.json();
           if (data && data.length > 0) {
@@ -209,7 +210,7 @@ const Monitor = () => {
           headers["Authorization"] = `Bearer ${token}`;
         }
 
-        const riskResponse = await fetch("http://localhost:3002/risk-analysis", {
+        const riskResponse = await fetch(`${API_BASE_URL}/risk-analysis`, {
           method: "POST",
           headers: headers,
           body: JSON.stringify(payload)
