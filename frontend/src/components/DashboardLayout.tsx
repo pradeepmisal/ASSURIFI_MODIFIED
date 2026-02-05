@@ -203,7 +203,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     return (
       <>
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-slate-800/50">
+        <div className="h-16 md:h-20 px-4 border-b border-slate-800/50 flex items-center">
           <Link to="/" className="flex items-center gap-2">
             <div className="flex items-center justify-center h-8 w-8 rounded-md bg-transparent">
               <Shield className="h-6 w-6 text-blue-400" />
