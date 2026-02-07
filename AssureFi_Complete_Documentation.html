@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssureFi Project Documentation</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --code-bg: #f3f4f6;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #f8fafc;
+        }
+
+        .document-container {
+            background-color: var(--bg-color);
+            padding: 50px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            color: #111827;
+            margin-top: 1.5em;
+        }
+
+        h1 {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 15px;
+            font-size: 2.5em;
+            margin-top: 0;
+        }
+
+        h2 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        code {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            background-color: var(--code-bg);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+
+        pre {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: 0.85em;
+        }
+
+        .mermaid {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+
+        .print-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        ul {
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .document-container {
+                box-shadow: none;
+                padding: 20px;
+            }
+
+            .print-btn {
+                display: none;
+            }
+
+            pre {
+                background-color: #f3f4f6;
+                color: black;
+                border: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button onclick="window.print()" class="print-btn">🖨️ Save as PDF / Print</button>
+
+    <div class="document-container">
+        <h1>AssureFi - Intelligent Crypto Security Platform</h1>
+        <p><strong>Project Documentation & Interview Guide</strong></p>
+
+        <h2>1. Executive Summary</h2>
+        <p><strong>AssureFi</strong> is a comprehensive Web3 security platform designed to protect investors from crypto
+            scams, rug pulls, and vulnerable smart contracts. It combines <strong>real-time data analysis</strong>
+            (Liquidity, Market Cap, News) with <strong>multi-model AI Agents</strong> (Google Gemini, Llama 3 via Groq)
+            to provide a unified "Risk Score" for any token or smart contract.</p>
+        <p><strong>Core Mission:</strong> To democratize smart contract auditing and make high-level security insights
+            accessible to non-technical retail investors.</p>
+
+        <hr>
+
+        <h2>2. Technology Stack</h2>
+        <p>The project follows a <strong>Microservices-aided Monolithic Architecture</strong> (MERN Stack + Specialized
+            Python Microservices).</p>
+
+        <h3>Frontend (Client-Side)</h3>
+        <ul>
+            <li><strong>Framework:</strong> React 18 + Vite (for high performance and fast HMR).</li>
+            <li><strong>Language:</strong> TypeScript (for type safety and reducing runtime errors).</li>
+            <li><strong>UI Library:</strong> Tailwind CSS (Styling), Radix UI (Accessible Components), Framer Motion
+                (Animations).</li>
+            <li><strong>State Management:</strong> React Query (Server state), Context API (Auth state).</li>
+            <li><strong>Charting:</strong> Recharts (Liquidity/Sentiment visualization).</li>
+        </ul>
+
+        <h3>Backend (Server-Side)</h3>
+        <ul>
+            <li><strong>Runtime:</strong> Node.js.</li>
+            <li><strong>Framework:</strong> Express.js (REST API).</li>
+            <li><strong>Database:</strong> MongoDB + Mongoose (User profiles, Analysis History, Caching).</li>
+            <li><strong>Authentication:</strong> JWT (JSON Web Tokens) + BCrypt (Password Hashing).</li>
+        </ul>
+
+        <h3>AI & Data Layer (The Brains)</h3>
+        <ul>
+            <li><strong>Primary AI Engine:</strong> Google Gemini Pro 1.5/2.0 (Context-heavy analysis).</li>
+            <li><strong>High-Speed AI:</strong> Groq (Llama 3-70b) for ultra-fast initial scans.</li>
+            <li><strong>Blockchain Data:</strong> Etherscan V2 API (Source Code), Solscan (via microservice).</li>
+            <li><strong>Sentiment Sources:</strong> Reddit API, Crypto News Feeds.</li>
+            <li><strong>Liquidity Service:</strong> Python Microservice (FastAPI/Flask) hosted on Render (handles
+                pandas/numpy number crunching for liquidity pools).</li>
+        </ul>
+
+        <hr>
+
+        <h2>3. System Architecture</h2>
+        <div class="mermaid">
+            graph TD
+            %% Nodes
+            User["User (React Frontend)"]
+            API_GW["Node.js/Express Backend"]
+
+            %% Edges
+            User <-->|REST API| API_GW
+
+                %% Subgraphs
+                subgraph CoreServices ["Core Backend Services"]
+                direction TB
+                AuthService["Auth Service (JWT)"]
+                AuditService["Audit Service"]
+                SentimentService["Sentiment Service"]
+                RiskService["Risk Aggregator"]
+                end
+
+                subgraph DataLayer ["Data and AI Layer"]
+                graph TD
+                %% Styling Classes
+                classDef frontend fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#000;
+                classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#000;
+                classDef service fill:#fef9c3,stroke:#ca8a04,stroke-width:2px,color:#000;
+                classDef ai fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,stroke-dasharray: 5 5,color:#000;
+                classDef data fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#000;
+                classDef db fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#000;
+
+                %% Main Flow
+                User["👤 User (React Client)"]:::frontend
+                API["⚙️ API Gateway (Express)"]:::backend
+
+                User <-->|REST API| API
+
+                    %% Services Subgraph
+                    subgraph Services ["🧠 Core Logic Services"]
+                    direction TB
+                    Auth["Auth Service"]:::service
+                    Audit["🔍 Audit Service"]:::service
+                    Risk["🛡️ Risk Engine"]:::service
+                    Sent["📈 Sentiment Service"]:::service
+                    end
+
+                    API --> Auth
+                    API --> Audit
+                    API --> Risk
+                    API --> Sent
+
+                    %% External & AI Subgraph
+                    subgraph External ["☁️ Data & AI Cloud"]
+                    direction TB
+                    Groq["⚡ Groq (Llama 3)"]:::ai
+                    Gemini["✨ Google Gemini"]:::ai
+                    Etherscan["📜 Etherscan API"]:::data
+                    Social["📢 Reddit & News APIs"]:::data
+                    PyService["💧 Python Liquidity Node"]:::data
+                    end
+
+                    %% Database Subgraph
+                    subgraph Storage ["💾 Persistence"]
+                    DB[("🍃 MongoDB")]:::db
+                    end
+
+                    %% Detailed Connections
+                    Auth --> DB
+                    Risk --> DB
+
+                    %% Audit Flow
+                    Audit -->|1. Get Source| Etherscan
+                    Audit -->|2. Fast Scan| Groq
+                    Audit -.->|3. Fallback| Gemini
+
+                    %% Sentiment Flow
+                    Sent -->|Fetch Data| Social
+                    Sent -->|Analyze| Gemini
+
+                    %% Risk Flow
+                    Risk -->|Get Metrics| PyService
+        </div>
+
+        <hr>
+
+        <h2>4. "Behind The Scenes": Module Deep Dives</h2>
+        <p><em>Here is exactly how the system works, step-by-step, for the interviewer.</em></p>
+
+        <h3>Module A: Smart Contract Audit (<code>contract.service.js</code>)</h3>
+        <p><strong>The "Scanner"</strong></p>
+        <ol>
+            <li><strong>Input:</strong> User provides a contract address (e.g., <code>0x123...</code>).</li>
+            <li><strong>Source Extraction:</strong> The backend calls <strong>Etherscan V2 API</strong>. It doesn't just
+                get the ABI; it fetches the full <em>verified source code</em>.</li>
+            <li><strong>Preprocessing:</strong>
+                <ul>
+                    <li>The code is cleaned (comments removed, whitespace minimized) to fit into AI context windows.
+                    </li>
+                    <li>If the code is too large (>30k chars), it is efficiently truncated while preserving the core
+                        logic functions.</li>
+                </ul>
+            </li>
+            <li><strong>The "AI Pipeline" (Failover System):</strong>
+                <ul>
+                    <li><strong>Attempt 1 Analysis (Speed):</strong> Code is sent to <strong>Groq (Llama 3)</strong>.
+                        It's extremely fast and good at reading code patterns.</li>
+                    <li><strong>Attempt 2 Analysis (Depth):</strong> If Groq fails or rate limits, we switch to
+                        <strong>Google Gemini</strong>.
+                    </li>
+                    <li><strong>Attempt 3 Analysis (Static Guard):</strong> If both AIs fail (which happens in
+                        production!), we have a custom <code>analyzeContractStatic</code> method. It uses
+                        <strong>Regular Expressions (Regex)</strong> to hunt for dangerous keywords like
+                        <code>selfdestruct</code>, <code>tx.origin</code>, or <code>delegatecall</code>.
+                    </li>
+                </ul>
+            </li>
+            <li><strong>Scoring:</strong> The AI returns a JSON object with a score (0-100), vulnerability list, and an
+                "Investor Impact" summary (plain English explanation).</li>
+        </ol>
+
+        <h3>Module B: Market Sentiment Analysis (<code>sentiment.service.js</code>)</h3>
+        <p><strong>The "Vibe Checker"</strong></p>
+        <ol>
+            <li><strong>Data Harvesting:</strong> In parallel (<code>Promise.all</code>), we fetch:
+                <ul>
+                    <li><strong>Reddit:</strong> Top posts from <code>r/cryptocurrency</code>, <code>r/bitcoin</code>,
+                        etc., related to the token.</li>
+                    <li><strong>News:</strong> Recent headlines from crypto news aggregators.</li>
+                </ul>
+            </li>
+            <li><strong>Prompt Engineering:</strong> We construct a massive text block: <em>"Here are 10 reddit posts
+                    and 5 news articles. Analyze the general emotion."</em></li>
+            <li><strong>AI Judgment:</strong> Gemini/Groq processes this text and outputs:
+                <ul>
+                    <li><strong>Score:</strong> -1 (Bearish) to +1 (Bullish).</li>
+                    <li><strong>Key Drivers:</strong> "Why are people happy/sad?" (e.g., "Mainnet launch delayed").</li>
+                </ul>
+            </li>
+            <li><strong>Fallback:</strong> If AI is down, we use a "Bag of Words" algorithm. We count positive words
+                ("bull", "moon", "partnership") vs. negative words ("hack", "dump", "scam") to calculate a rough score
+                locally.</li>
+        </ol>
+
+        <h3>Module C: Liquidity & Risk Engine (<code>risk.service.js</code>)</h3>
+        <p><strong>The "Aggregator"</strong></p>
+        <ol>
+            <li><strong>Liquidity Fetching:</strong> The Node.js backend calls our <strong>Python Microservice</strong>.
+                This service scrapes DEX (Decentralized Exchange) data to find:
+                <ul>
+                    <li>Total Liquidity (USD).</li>
+                    <li>Market Cap.</li>
+                    <li>24h Volume.</li>
+                </ul>
+            </li>
+            <li><strong>Logic Checks (The "Smart Fallback"):</strong>
+                <ul>
+                    <li>If <code>Liquidity < $5,000</code> → <strong>Critical Risk flag</strong>.</li>
+                    <li>If <code>Liquidity > Market Cap</code> → <strong>Inverted Market Structure flag</strong> (Sign
+                        of a scam).</li>
+                </ul>
+            </li>
+            <li><strong>Final Report:</strong> The module combines the <strong>Contract Audit Code</strong>,
+                <strong>Sentiment Score</strong>, and <strong>Liquidity Health</strong> into one final JSON response for
+                the frontend.
+            </li>
+        </ol>
+
+        <h3>Module D: Authentication (<code>auth.controller.js</code>)</h3>
+        <p><strong>The "Gatekeeper"</strong></p>
+        <ul>
+            <li>Standard industry practice: <strong>Stateless JWT Authentication</strong>.</li>
+            <li><strong>Register:</strong> User/Email/Pass -> Password hashed with <code>bcrypt</code> (10 salt rounds)
+                -> Saved to MongoDB.</li>
+            <li><strong>Login:</strong> Password matches hash? -> specific <strong>JWT Token</strong> signed with
+                <code>process.env.JWT_SECRET</code>.
+            </li>
+            <li><strong>Protection:</strong> Middleware checks the <code>Authorization: Bearer <token></code> header for
+                private routes (like "My History").</li>
+        </ul>
+
+        <hr>
+
+        <h2>5. Key Code Snippets (For Whiteboard/Screen Share)</h2>
+
+        <h4>1. The "Safety Net" Static Analyzer (If AI Fails):</h4>
+        <pre><code>static analyzeContractStatic(sourceCode) {
+    let score = 65; // Base Medium Risk
+
+    // Bonus: Modern Solidity Version (Auto-overflow checks)
+    if (/pragma solidity \^?0\.8/.test(sourceCode)) score += 15;
+
+    // Penalty: Phishing Vulnerability
+    if (sourceCode.includes('tx.origin')) {
+         score -= 25;
+         vulnerabilities.push({ name: "Phishing Risk (tx.origin)" });
+    }
+
+    // Penalty: Backdoor
+    if (sourceCode.includes('selfdestruct')) {
+         score -= 40; // Critical hit
+    }
+
+    return { overallScore: score, ... };
+}</code></pre>
+
+        <h4>2. The Robust AI Failover System:</h4>
+        <pre><code>// From ContractService
+try {
+    // Plan A: Fast & Cheap
+    return await analyzeWithGroq(prompt);
+} catch (e) {
+    try {
+        // Plan B: Powerful & Context-heavy
+        return await geminiAnalyze(prompt);
+    } catch (e2) {
+        // Plan C: Reliable Algorithm
+        return analyzeContractStatic(sourceCode);
+    }
+}</code></pre>
+
+        <hr>
+
+        <h2>6. Interview Q&A (Prepare for these!)</h2>
+
+        <h3>Technical Questions</h3>
+        <p><strong>Q: Why did you use React over Next.js?</strong><br>
+            <strong>A:</strong> "Since this is a dashboard-heavy application where user interaction happens entirely on
+            the client side (SPA pattern) and SEO for individual dynamic analysis pages wasn't the primary priority,
+            React with Vite offered the fastest development cycle and performance. However, for the landing page
+            marketing SEO, we can easily migrate to Next.js in the future."<br>
+            <em>(Note: If you want to sound more advanced, say: "We used Vite for its superior HMR speed compared to
+                Webpack.")</em>
+        </p>
+
+        <p><strong>Q: How do you handle proper error handling with external AI APIs?</strong><br>
+            <strong>A:</strong> "Optimization and reliability are key. We implemented a <strong>Tiered Fallback
+                System</strong>. We first try Groq for speed. If that fails (503/Rate Limit), we gracefully degrade to
+            Gemini. If both AI services are down, we don't crash the app; we fall back to a deterministic 'Static
+            Analysis' algorithm that scans for known vulnerability keywords using Regex. This ensures the user
+            <em>always</em> gets a result."
+        </p>
+
+        <p><strong>Q: Explain how the frontend talks to the backend.</strong><br>
+            <strong>A:</strong> "We use a RESTful architecture. The frontend uses <strong>React Query</strong> (TanStack
+            Query) to manage async state. It calls our Express API endpoints (e.g., <code>/analyze-contract</code>). We
+            use an Axios/Fetch wrapper with an Interceptor to automatically attach the JWT token from LocalStorage to
+            the <code>Authorization</code> header for every secure request."
+        </p>
+
+        <p><strong>Q: How do you secure user passwords?</strong><br>
+            <strong>A:</strong> "We never store plain text passwords. We use <code>bcrypt</code> to hash passwords with
+            a salt factor of 10 before saving to MongoDB. During login, we compare the input password's hash against the
+            database hash."
+        </p>
+
+        <h3>Behavioral / Project Questions</h3>
+        <p><strong>Q: What was the most challenging part of this project?</strong><br>
+            <strong>A:</strong> "Handling the variability of Smart Contract source code. Sometimes code is massive (50k+
+            lines) or not verified. We had to implement an intelligent 'Chunking and Truncation' logic to fit the code
+            into the AI's context window without losing the critical logic functions."
+        </p>
+
+        <p><strong>Q: How does this project scale?</strong><br>
+            <strong>A:</strong> "Since the backend is stateless (JWT Auth) and uses a microservice architecture (Python
+            separated from Node.js), we can horizontally scale the Node.js API instances behind a load balancer easily.
+            The heavy lifting (AI analysis) is offloaded to external APIs, so our server load remains relatively low."
+        </p>
+
+        <hr>
+
+        <h2>7. Deployment & Environment</h2>
+        <ul>
+            <li><strong>Env Variables:</strong> <code>.env</code> manages sensitive keys (<code>GEMINI_API_KEY</code>,
+                <code>JWT_SECRET</code>, <code>MONGO_URI</code>).
+            </li>
+            <li><strong>Database:</strong> MongoDB Atlas (Cloud Cluster).</li>
+            <li><strong>Hosting:</strong>
+                <ul>
+                    <li>Frontend: Vercel / Netlify.</li>
+                    <li>Backend: Render / Railway / AWS EC2.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <hr>
+        <p style="text-align: center; color: #666; margin-top: 50px;"><em>Created by AssureFi Engineering Team</em></p>
+    </div>
+
+    <!-- Mermaid JS Library -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</body>
+
+</html>

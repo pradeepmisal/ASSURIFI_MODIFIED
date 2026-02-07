@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssureFi Architecture Diagram</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px;
+            overflow-x: auto;
+            text-align: center;
+        }
+
+        .actions {
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>AssureFi System Architecture</h1>
+
+    <div class="container">
+        <div class="mermaid">
+            graph TD
+            User[User (React Frontend)] <-->|REST API| API_GW[Node.js/Express Backend]
+
+                subgraph "Core Backend Services"
+                API_GW --> AuthService[Auth Service (JWT)]
+                API_GW --> AuditService[Audit Service]
+                API_GW --> SentimentService[Sentiment Service]
+                API_GW --> RiskService[Risk Aggregator]
+                end
+
+                subgraph "Data & AI Layer"
+                AuditService -->|Source Code| Etherscan[Etherscan/BscScan]
+                AuditService -->|Analysis| Groq[Groq (Llama 3)]
+                AuditService -->|Fallback| Gemini[Google Gemini]
+
+                SentimentService -->|Social Data| Reddit[Reddit API]
+                SentimentService -->|News| NewsAPI[News API]
+
+                RiskService -->|Liquidity Metrics| PyService[Python Microservice]
+                end
+
+                subgraph "Database"
+                AuthService --> MongoDB[(MongoDB)]
+                RiskService --> MongoDB
+                end
+        </div>
+    </div>
+
+    <div class="actions">
+        <p><strong>How to save this diagram:</strong></p>
+        <p>1. Open this file in your browser (Chrome/Edge/Firefox).</p>
+        <p>2. You will see the diagram rendered above.</p>
+        <p>3. Use a screenshot tool (Snipping Tool) to save it as an image, or "Print to PDF".</p>
+    </div>
+
+    <!-- Mermaid JS Library -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+</body>
+
+</html>
