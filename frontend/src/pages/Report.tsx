@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/config";
 
@@ -251,8 +252,8 @@ const Report = () => {
                                     <div className="flex justify-between items-center mb-2">
                                         <h3 className="font-medium text-white">Security Score</h3>
                                         <div className={`px-2 py-1 text-sm font-medium rounded-full ${score >= 80 ? "bg-green-400/10 text-green-200" :
-                                                score >= 60 ? "bg-yellow-400/10 text-yellow-200" :
-                                                    "bg-red-400/10 text-red-200"
+                                            score >= 60 ? "bg-yellow-400/10 text-yellow-200" :
+                                                "bg-red-400/10 text-red-200"
                                             }`}>
                                             {getScoreLabel(score)}
                                         </div>
@@ -260,8 +261,8 @@ const Report = () => {
                                     <Progress
                                         value={score}
                                         className={`h-2 mb-2 bg-white/5 [&>div]:${score >= 80 ? "bg-green-400/80" :
-                                                score >= 60 ? "bg-yellow-300/70" :
-                                                    "bg-red-700/80"
+                                            score >= 60 ? "bg-yellow-300/70" :
+                                                "bg-red-700/80"
                                             }`}
                                     />
                                     <p className="text-sm text-gray-300">
@@ -309,9 +310,9 @@ const Report = () => {
                                                                 <h4 className="font-medium text-white">{item.name || "Issue Detected"}</h4>
                                                             </div>
                                                             <div className={`text-xs font-medium px-2 py-1 rounded-full uppercase ${item.severity === "critical" ? "bg-red-400/10 text-red-200" :
-                                                                    item.severity === "high" ? "bg-orange-400/10 text-orange-200" :
-                                                                        item.severity === "medium" ? "bg-yellow-400/10 text-yellow-200" :
-                                                                            "bg-blue-400/10 text-blue-200"
+                                                                item.severity === "high" ? "bg-orange-400/10 text-orange-200" :
+                                                                    item.severity === "medium" ? "bg-yellow-400/10 text-yellow-200" :
+                                                                        "bg-blue-400/10 text-blue-200"
                                                                 }`}>
                                                                 {item.severity || "Unknown"}
                                                             </div>
