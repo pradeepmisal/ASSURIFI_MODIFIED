@@ -80,9 +80,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       icon: <MessageSquare className="h-5 w-5" />
     },
     {
-      name: "History",
-      href: "/history",
-      icon: <BarChart3 className="h-5 w-5" />
+      name: "Portfolio Shield",
+      href: "/portfolio",
+      icon: <Shield className="h-5 w-5" />
     }
   ];
 

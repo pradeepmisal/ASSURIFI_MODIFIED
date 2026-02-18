@@ -8,6 +8,7 @@ import searchRoutes from './routes/search.routes.js';
 import sentimentRoutes from './routes/sentiment.routes.js';
 import riskRoutes from './routes/risk.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import portfolioRoutes from './routes/portfolio.routes.js';
 
 // Initialize Express App
 const app = express();
@@ -24,6 +25,7 @@ app.use('/analyze-contract', contractRoutes);
 app.use('/search', searchRoutes);
 app.use('/', sentimentRoutes); // /analyze
 app.use('/', riskRoutes);      // /risk-analysis AND /get_token (Liquidity)
+app.use('/portfolio', portfolioRoutes); // Portfolio Shield
 
 // Health Check
 app.get('/health', (req, res) => {

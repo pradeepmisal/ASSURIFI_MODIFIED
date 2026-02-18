@@ -8,7 +8,8 @@ import {
   Percent,
   BarChart3,
   Wallet,
-  Search
+  Search,
+  Star
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -39,6 +40,8 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { tokenData as defaultTokenData } from "@/data/liquidityData";
 import { API_BASE_URL } from "@/config";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 
 
@@ -55,6 +58,10 @@ const Monitor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedPair, setSelectedPair] = useState<any>(null);
+  const [isPinned, setIsPinned] = useState(false);
+  const [isPinning, setIsPinning] = useState(false);
+  const { token: authToken } = useAuth();
+  const { toast } = useToast();
 
   // Ref to track if the search query update comes from a selection
   // If true, we should skip the autocomplete search
@@ -295,6 +302,44 @@ const Monitor = () => {
     return "bg-green-500";
   };
 
+  const handlePinToPortfolio = async () => {
+    if (!authToken) {
+      toast({ title: "Login Required", description: "Please log in to pin contracts to your portfolio.", variant: "destructive" });
+      return;
+    }
+    setIsPinning(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/portfolio/pin`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contractAddress: selectedPair?.baseToken?.address || tokenData.token_name,
+          tokenName: `${tokenData.token_name} (${tokenData.token_symbol})`,
+          chainId: selectedPair?.chainId || 'ethereum',
+          lastRiskScore: tokenData.risk?.risk_score || null,
+          analysisType: 'LIQUIDITY',
+          notes: ''
+        })
+      });
+      if (response.ok) {
+        setIsPinned(true);
+        toast({ title: "⭐ Pinned!", description: "Token added to your Portfolio Shield." });
+      } else if (response.status === 409) {
+        setIsPinned(true);
+        toast({ title: "Already Pinned", description: "This token is already in your portfolio." });
+      } else {
+        throw new Error('Failed to pin');
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to pin token.", variant: "destructive" });
+    } finally {
+      setIsPinning(false);
+    }
+  };
+
   // Generate simulated historical liquidity data based on current liquidity
   const hoursAgo = (hours: number) => {
     const date = new Date();
@@ -434,6 +479,20 @@ const Monitor = () => {
                 <CardDescription>
                   Last updated: {formatDate(tokenData.timestamp)}
                 </CardDescription>
+                {/* Pin to Portfolio Button */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={`mt-2 gap-2 text-xs w-fit ${isPinned
+                      ? 'border-amber-500/30 text-amber-400 bg-amber-500/10 cursor-default'
+                      : 'border-slate-700 text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400'
+                    }`}
+                  onClick={handlePinToPortfolio}
+                  disabled={isPinned || isPinning}
+                >
+                  <Star className={`h-3.5 w-3.5 ${isPinned ? 'fill-amber-400' : ''}`} />
+                  {isPinning ? 'Pinning...' : isPinned ? 'Pinned to Portfolio' : 'Pin to Portfolio'}
+                </Button>
               </CardHeader>
               <CardContent>
 

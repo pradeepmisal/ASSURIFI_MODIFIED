@@ -12,6 +12,7 @@ import TrustScore from "./pages/TrustScore";
 import SentimentAnalysis from "./pages/SentimentAnalysis";
 import Profile from "./pages/Profile";
 import History from "./pages/History";
+import Portfolio from "./pages/Portfolio";
 import Report from "./pages/Report";
 
 const queryClient = new QueryClient();
@@ -42,7 +43,8 @@ const App = () => (
             <Route path="/audit" element={<Audit />} />
             <Route path="/monitor" element={<Monitor />} />
             <Route path="/sentiment-analysis" element={<SentimentAnalysis />} />
-            <Route path="/history" element={<History />} />
+            <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/history" element={<Portfolio />} />
             <Route path="/report/:id" element={<Report />} />
 
             {/* User Pages */}

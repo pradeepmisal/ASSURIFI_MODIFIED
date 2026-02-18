@@ -7,6 +7,10 @@ const PORT = process.env.PORT || 3002;
 // Connect to Database
 connectDB();
 
+// Start Keep-Alive Service (Prevent Render Sleep)
+import startKeepAlive from './services/keepAlive.service.js';
+startKeepAlive();
+
 app.listen(PORT, () => {
     console.log(`\n🚀 AssureFi Unified Backend running on port ${PORT}`);
     console.log(`\nEndpoints:`);

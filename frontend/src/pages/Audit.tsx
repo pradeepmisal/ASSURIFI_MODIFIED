@@ -14,7 +14,8 @@ import {
   Code,
   AlertCircle,
   Moon,
-  Sun
+  Sun,
+  Star
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,6 +27,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import SearchBar from "@/components/SearchBar";
 import { API_BASE_URL } from "@/config";
+import { useAuth } from "@/context/AuthContext";
 
 interface VulnerabilityItem {
   id: number;
@@ -50,7 +52,10 @@ const Audit = () => {
   const [summary, setSummary] = useState("");
   const [investorImpactSummary, setInvestorImpactSummary] = useState("");
   const [isDark, setIsDark] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+  const [isPinning, setIsPinning] = useState(false);
   const { toast } = useToast();
+  const { token } = useAuth();
 
   useEffect(() => {
     // ... (theme existing logic)
@@ -248,6 +253,44 @@ const Audit = () => {
     return "High Risk";
   };
 
+  const handlePinToPortfolio = async () => {
+    if (!token) {
+      toast({ title: "Login Required", description: "Please log in to pin contracts to your portfolio.", variant: "destructive" });
+      return;
+    }
+    setIsPinning(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/portfolio/pin`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contractAddress: contractAddress.trim() || 'source-code-audit',
+          tokenName: contractAddress.trim() ? `Contract ${contractAddress.trim().slice(0, 8)}...` : 'Custom Code Audit',
+          chainId: 'ethereum',
+          lastRiskScore: auditScore,
+          analysisType: 'AUDIT',
+          notes: ''
+        })
+      });
+      if (response.ok) {
+        setIsPinned(true);
+        toast({ title: "⭐ Pinned!", description: "Contract added to your Portfolio Shield." });
+      } else if (response.status === 409) {
+        setIsPinned(true);
+        toast({ title: "Already Pinned", description: "This contract is already in your portfolio." });
+      } else {
+        throw new Error('Failed to pin');
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to pin contract.", variant: "destructive" });
+    } finally {
+      setIsPinning(false);
+    }
+  };
+
   return (
     <PageTransition>
       <DashboardLayout title="Smart Contract Audit" description="Analyze smart contracts for vulnerabilities and security issues">
@@ -403,6 +446,20 @@ const Audit = () => {
                       </div>
                     </div>
                     <p className="text-gray-300 mt-1 text-xs">Scan completed on {new Date().toLocaleString()}</p>
+                    {/* Pin to Portfolio Button */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`mt-2 gap-2 text-xs ${isPinned
+                          ? 'border-amber-500/30 text-amber-400 bg-amber-500/10 cursor-default'
+                          : 'border-slate-700 text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400'
+                        }`}
+                      onClick={handlePinToPortfolio}
+                      disabled={isPinned || isPinning}
+                    >
+                      <Star className={`h-3.5 w-3.5 ${isPinned ? 'fill-amber-400' : ''}`} />
+                      {isPinning ? 'Pinning...' : isPinned ? 'Pinned to Portfolio' : 'Pin to Portfolio'}
+                    </Button>
                   </div>
                   <div className="px-6 pb-8 pt-4 space-y-6">
                     {/* Overall Score Section */}
