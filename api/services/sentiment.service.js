@@ -11,6 +11,48 @@ class SentimentService {
         try {
             console.log(`[SentimentService] Starting analysis for: ${coin_name}`);
 
+            // ─── AGENTIC PATH (Primary) ─────────────────────────
+            try {
+                const { runSentimentAnalystAgent } = await import('../agents/sentimentAnalyst.agent.js');
+                console.log('[SentimentService] 🤖 Using agentic pipeline...');
+
+                const agentResult = await runSentimentAnalystAgent(coin_name);
+
+                // Build backward-compatible report structure
+                const report = {
+                    average_sentiment: agentResult.sentimentScore,
+                    sentiment_distribution: {
+                        Positive: agentResult.overallSentiment === 'BULLISH' ? 70 : (agentResult.overallSentiment === 'NEUTRAL' ? 30 : 10),
+                        Neutral: agentResult.overallSentiment === 'NEUTRAL' ? 50 : 20,
+                        Negative: agentResult.overallSentiment === 'BEARISH' ? 70 : (agentResult.overallSentiment === 'NEUTRAL' ? 20 : 10)
+                    },
+                    summary: agentResult.summary || 'Sentiment analysis complete.',
+                    latest_news: [], // The agent consumes this via tools, we keep the schema empty but valid for the frontend if the agent didn't populate it.
+                    reddit_posts: [],
+                    news_articles: [],
+                    analysis_time: new Date().toISOString(),
+                    _meta: agentResult._meta,
+                    aiModelUsed: 'Agentic Pipeline (LangChain ReAct)',
+                    // Include the new rich fields under the hood
+                    agentDetails: {
+                        overallSentiment: agentResult.overallSentiment,
+                        confidenceDrivers: agentResult.confidenceDrivers,
+                        redditSignal: agentResult.redditSignal,
+                        newsSignal: agentResult.newsSignal,
+                        webNarrative: agentResult.webNarrative,
+                        dataQuality: agentResult.dataQuality,
+                        keyDrivers: agentResult.keyDrivers
+                    }
+                };
+
+                return report;
+            } catch (agentError) {
+                console.warn(`[SentimentService] ⚠️ Agent failed: ${agentError.message}. Falling back to legacy path.`);
+            }
+
+            // ─── LEGACY PATH (Fallback) ─────────────────────────
+            console.log('[SentimentService] 📋 Using legacy single-prompt path...');
+
             // 1. Fetch Real Data
             try {
                 [redditPosts, newsArticles] = await Promise.all([

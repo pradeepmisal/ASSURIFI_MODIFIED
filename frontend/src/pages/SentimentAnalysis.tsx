@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { TrendingUp, TrendingDown, MessageSquare, Newspaper, Activity, Zap, Search } from "lucide-react";
 import { mockCoinData } from "@/data/mockCoinData";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { useLocation } from 'react-router-dom';
 
 // Check api/app.js to confirm exact path. 
 // Assuming mounted at /api/sentiment based on standard practice, but verify.
@@ -14,6 +15,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart,
 const API_BASE_URL = "http://localhost:3002";
 
 const CryptoSentimentDashboard = () => {
+  const location = useLocation();
   const [selectedCoin, setSelectedCoin] = useState(mockCoinData[0]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -27,10 +29,18 @@ const CryptoSentimentDashboard = () => {
 
   useEffect(() => {
     document.title = "Sentiment Terminal - SafeFund Guardian";
-    // Initialize search with default
+
+    // Check if we navigated here from the Autonomous Supervisor with pre-analyzed data
+    if (location.state && location.state.token && location.state.agentData) {
+      setSearchQuery(location.state.token);
+      setData(location.state.agentData); // Instantly inject the agent's data!
+      return;
+    }
+
+    // Initialize search with default if no state passed
     setSearchQuery(mockCoinData[0].name);
     fetchAnalysis(selectedCoin.name);
-  }, []);
+  }, [location.state]);
 
   const fetchAnalysis = async (coinName: string) => {
     setLoading(true);

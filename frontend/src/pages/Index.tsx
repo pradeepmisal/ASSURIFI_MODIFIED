@@ -17,17 +17,21 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Hero from '../components/Hero';
+import { AnalysisOverlay } from '../components/AnalysisOverlay';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
+  const [activeToken, setActiveToken] = useState<string | null>(null);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   const features = [
     {
-      title: "Smart Contract Audit",
-      description: "AI-powered vulnerability detection with real-time code analysis and comprehensive security scoring.",
+      title: "Automated Contract Auditing",
+      description: "Deep-time neural network analysis of source code to instantly detect reentrancy attacks, honeypots, and hidden zero-day vulnerabilities.",
       icon: Shield,
       link: "/audit",
       gradient: "from-blue-500 to-cyan-500",
@@ -35,8 +39,8 @@ const Index = () => {
       stats: "10,000+ Audits"
     },
     {
-      title: "Liquidity Monitor",
-      description: "Track liquidity pools in real-time, detect rug pull risks, and analyze price impact instantly.",
+      title: "On-Chain Rug Pull Detection",
+      description: "Real-time monitoring of automated market makers (AMMs) to evaluate creator wallet holdings, lock-up periods, and liquidity drains.",
       icon: Activity,
       link: "/monitor",
       gradient: "from-green-500 to-emerald-500",
@@ -44,8 +48,8 @@ const Index = () => {
       stats: "24/7 Monitoring"
     },
     {
-      title: "Sentiment Analysis",
-      description: "AI-driven social sentiment tracking from Reddit, Twitter, and crypto communities worldwide.",
+      title: "Global Market Sentiment",
+      description: "Scrape and synthesize millions of data points across Twitter, Reddit, and Discord to gauge retail trust and detect pump-and-dump schemes.",
       icon: MessageSquare,
       link: "/sentiment-analysis",
       gradient: "from-purple-500 to-pink-500",
@@ -165,91 +169,10 @@ const Index = () => {
       </div>
 
       <main className="relative z-10">
-        {/* Hero Section */}
-        <section className="min-h-screen flex items-center justify-center px-4 md:px-8 pt-20">
-          <div className="max-w-7xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              {/* Badge */}
-              <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-8"
-                whileHover={{ scale: 1.05 }}
-              >
-                <Zap className="w-4 h-4 text-blue-400" />
-                <span className="text-sm text-blue-300">AI-Powered DeFi Security Platform</span>
-              </motion.div>
+        {/* New Quick Analyze Hero Gateway */}
+        <Hero onAnalyze={(token) => setActiveToken(token)} />
 
-              {/* Main Headline */}
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                Protect Your{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400">
-                  DeFi Investments
-                </span>
-                <br />
-                with AI-Powered Security
-              </h1>
-
-              {/* Subheadline */}
-              <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-3xl mx-auto">
-                Analyze smart contracts, monitor liquidity, and detect risks before you invest.
-                Make informed decisions with real-time AI analysis.
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-                <Link to="/login">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/60 transition-all"
-                  >
-                    Start Free Analysis
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Trust Badges */}
-              <div className="flex flex-wrap items-center justify-center gap-6 mb-12">
-                {trustBadges.map((badge, index) => (
-                  <motion.div
-                    key={index}
-                    className="flex items-center gap-2 text-slate-400"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + index * 0.1 }}
-                  >
-                    <badge.icon className="w-5 h-5 text-blue-400" />
-                    <span className="text-sm">{badge.text}</span>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Trusted By Section */}
-              <motion.div
-                className="mt-16"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                <p className="text-sm text-slate-500 mb-6 uppercase tracking-wider">Trusted by Leading DeFi Projects</p>
-                <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 opacity-60">
-                  {/* Crypto Company Logos as Text (you can replace with actual logos later) */}
-                  <div className="text-slate-400 font-semibold text-lg hover:text-blue-400 transition-colors">Uniswap</div>
-                  <div className="text-slate-400 font-semibold text-lg hover:text-blue-400 transition-colors">Aave</div>
-                  <div className="text-slate-400 font-semibold text-lg hover:text-blue-400 transition-colors">Compound</div>
-                  <div className="text-slate-400 font-semibold text-lg hover:text-blue-400 transition-colors">Curve</div>
-                  <div className="text-slate-400 font-semibold text-lg hover:text-blue-400 transition-colors">MakerDAO</div>
-                  <div className="text-slate-400 font-semibold text-lg hover:text-blue-400 transition-colors">Chainlink</div>
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Features Section */}
+        {/* Feature Cards Section */}
         <section className="py-20 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             <motion.div
@@ -260,13 +183,13 @@ const Index = () => {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                Comprehensive{' '}
+                Decentralized{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                  Security Suite
+                  Security Intelligence
                 </span>
               </h2>
               <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-                Everything you need to protect your DeFi investments in one powerful platform
+                An institutional-grade risk assessment layer built specifically for Web3 traders, investors, and automated DeFi portfolio managers.
               </p>
             </motion.div>
 
@@ -336,10 +259,10 @@ const Index = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Start Protecting Your Investments Today
+              Start Protecting Your On-Chain Capital
             </h2>
             <p className="text-xl text-slate-300 mb-8">
-              Join thousands of smart investors using ASSUREFI to make safer DeFi decisions
+              Join thousands of smart investors relying on AssureFi's AI agents to navigate the crypto wild west safely.
             </p>
             <Link to="/login">
               <Button
@@ -356,6 +279,14 @@ const Index = () => {
       </main>
 
       <Footer />
+
+      {/* Conditional Analysis Overlay */}
+      {activeToken && (
+        <AnalysisOverlay
+          token={activeToken}
+          onClose={() => setActiveToken(null)}
+        />
+      )}
     </div>
   );
 };

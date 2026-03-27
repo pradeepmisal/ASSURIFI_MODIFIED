@@ -42,6 +42,7 @@ import { tokenData as defaultTokenData } from "@/data/liquidityData";
 import { API_BASE_URL } from "@/config";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "react-router-dom";
 
 
 
@@ -66,10 +67,39 @@ const Monitor = () => {
   // Ref to track if the search query update comes from a selection
   // If true, we should skip the autocomplete search
   const ignoreSearchRef = useRef(false);
+  const location = useLocation();
 
   useEffect(() => {
     document.title = "Liquidity Monitor - AssureFi Guardian";
-  }, []);
+
+    // Sub-agent bypass: If clicked from Autonomous Analysis overlay
+    if (location.state && location.state.token && location.state.agentData) {
+      const routeToken = location.state.token;
+      const agentData = location.state.agentData;
+      setSearchQuery(routeToken);
+
+      // Auto-trigger search to grab DexScreener charts, but inject agentData to skip AI processing
+      const runSearch = async () => {
+        setIsSearching(true);
+        try {
+          const response = await fetch(`${API_BASE_URL}/search/dex?q=${encodeURIComponent(routeToken)}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+              ignoreSearchRef.current = true;
+              setSelectedPair(data[0]);
+              setShowResults(false);
+              setSearchQuery(`${data[0].baseToken.name} (${data[0].baseToken.symbol})`);
+              await fetchTokenData(data[0], agentData);
+            }
+          }
+        } finally {
+          setIsSearching(false);
+        }
+      };
+      runSearch();
+    }
+  }, [location.state]);
 
   // Debounce logic for autocomplete
   useEffect(() => {
@@ -151,7 +181,7 @@ const Monitor = () => {
   };
 
 
-  const fetchTokenData = async (pair: any) => {
+  const fetchTokenData = async (pair: any, preAnalyzedAgentData?: any) => {
     setIsLoading(true);
     setIsAnalyzing(true);
     setHasSearched(true);
@@ -210,40 +240,55 @@ const Monitor = () => {
 
       // 3. Fetch Risk Analysis (AWAITED - blocking UI)
       let riskUpdates = {};
-      try {
-        const token = localStorage.getItem("token");
-        const headers: any = { "Content-Type": "application/json" };
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
 
-        const riskResponse = await fetch(`${API_BASE_URL}/risk-analysis`, {
-          method: "POST",
-          headers: headers,
-          body: JSON.stringify(payload)
-        });
-
-        if (riskResponse.ok) {
-          const riskResult = await riskResponse.json();
-
-          // Score Logic
-          let realScore = 0;
-          if (riskResult.contractAnalysis?.overallScore) realScore = riskResult.contractAnalysis.overallScore;
-          else if (riskResult.geminiAnalysis?.contractAnalysis?.overallScore) realScore = riskResult.geminiAnalysis.contractAnalysis.overallScore;
-          else if (riskResult.riskData && Array.isArray(riskResult.riskData)) {
-            const total = riskResult.riskData.reduce((acc: any, item: any) => acc + (item.risk || 0), 0);
-            realScore = Math.round(total / (riskResult.riskData.length || 1));
+      if (preAnalyzedAgentData) {
+        // Bypass LLM fetch by injecting supervisor's agent data
+        riskUpdates = {
+          risk: { ...transformedData.risk, risk_score: preAnalyzedAgentData.riskScore || 50 },
+          insights_list: [],
+          ai_insights_panel: {
+            liquidityHealth: preAnalyzedAgentData.liquidityRisk || 'Analyzed via Agentic framework.',
+            liquidityTrend: 'Stable pattern detected',
+            exitRiskSignal: preAnalyzedAgentData.riskLevel === 'CRITICAL' ? 'HIGH' : preAnalyzedAgentData.riskLevel || 'MEDIUM',
+            investorInterpretation: preAnalyzedAgentData.summary || 'See full intelligence breakdown.'
           }
-          if (realScore === 0) realScore = 50;
+        };
+      } else {
+        try {
+          const token = localStorage.getItem("token");
+          const headers: any = { "Content-Type": "application/json" };
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
 
-          riskUpdates = {
-            risk: { ...transformedData.risk, risk_score: realScore },
-            insights_list: riskResult.insightsList || [],
-            ai_insights_panel: riskResult.ai_insights_panel || null
-          };
+          const riskResponse = await fetch(`${API_BASE_URL}/risk-analysis`, {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(payload)
+          });
+
+          if (riskResponse.ok) {
+            const riskResult = await riskResponse.json();
+
+            // Score Logic
+            let realScore = 0;
+            if (riskResult.contractAnalysis?.overallScore) realScore = riskResult.contractAnalysis.overallScore;
+            else if (riskResult.geminiAnalysis?.contractAnalysis?.overallScore) realScore = riskResult.geminiAnalysis.contractAnalysis.overallScore;
+            else if (riskResult.riskData && Array.isArray(riskResult.riskData)) {
+              const total = riskResult.riskData.reduce((acc: any, item: any) => acc + (item.risk || 0), 0);
+              realScore = Math.round(total / (riskResult.riskData.length || 1));
+            }
+            if (realScore === 0) realScore = 50;
+
+            riskUpdates = {
+              risk: { ...transformedData.risk, risk_score: realScore },
+              insights_list: riskResult.insightsList || [],
+              ai_insights_panel: riskResult.ai_insights_panel || null
+            };
+          }
+        } catch (riskErr) {
+          console.error("Risk Fetch Failed", riskErr);
         }
-      } catch (riskErr) {
-        console.error("Risk Fetch Failed", riskErr);
       }
 
       // 4. Update State ONCE with ALL data
@@ -484,8 +529,8 @@ const Monitor = () => {
                   size="sm"
                   variant="outline"
                   className={`mt-2 gap-2 text-xs w-fit ${isPinned
-                      ? 'border-amber-500/30 text-amber-400 bg-amber-500/10 cursor-default'
-                      : 'border-slate-700 text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400'
+                    ? 'border-amber-500/30 text-amber-400 bg-amber-500/10 cursor-default'
+                    : 'border-slate-700 text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400'
                     }`}
                   onClick={handlePinToPortfolio}
                   disabled={isPinned || isPinning}

@@ -168,18 +168,81 @@ class RiskService {
     // --- Main Risk Analysis ---
     static async analyzeRisk(token_name, token_address, smart_contract_address, chainId = "solana", userId) {
 
-        // ... (existing code for fetching tokenData etc) ...
+        // ─── AGENTIC PATH (Primary) ─────────────────────────
+        try {
+            const { runRiskAssessorAgent } = await import('../agents/riskAssessor.agent.js');
+            console.log('[RISK SERVICE] 🤖 Using agentic pipeline...');
 
-        // 1. Get Contract Code (Same as before)
+            const agentResult = await runRiskAssessorAgent({
+                token_name,
+                token_address,
+                smart_contract_address,
+                chainId,
+            });
+
+            // Build backward-compatible report structure
+            const report = {
+                token_info: {
+                    name: token_name,
+                    address: token_address,
+                    chain_id: chainId
+                },
+                tokenData: { source: 'agent_pipeline' },
+                ai_insights_panel: agentResult.ai_insights_panel || {
+                    liquidityHealth: agentResult.liquidityRisk || 'See agent analysis',
+                    liquidityTrend: 'Stable',
+                    exitRiskSignal: agentResult.riskLevel === 'CRITICAL' ? 'HIGH' : agentResult.riskLevel || 'MEDIUM',
+                    investorInterpretation: agentResult.summary || 'See full analysis',
+                },
+                riskData: agentResult.riskData || [
+                    { category: 'Liquidity Risk', risk: agentResult.riskScore || 50 },
+                    { category: 'Contract Risk', risk: 50 },
+                    { category: 'Market Sentiment', risk: 50 },
+                ],
+                contractAnalysis: agentResult.contractAnalysis || {
+                    overallScore: 50,
+                    summary: agentResult.contractRiskInfluence || 'Contract risk assessed via agent',
+                },
+                _meta: agentResult._meta,
+                aiModelUsed: 'Agentic Pipeline (LangChain ReAct)',
+            };
+
+            // Save to MongoDB if userId provided
+            if (userId) {
+                try {
+                    const newAnalysis = new Analysis({
+                        type: 'LIQUIDITY',
+                        tokenName: token_name,
+                        tokenAddress: token_address,
+                        contractAddress: smart_contract_address,
+                        chainId: chainId,
+                        overallRiskScore: agentResult.riskScore || 0,
+                        geminiAnalysis: report,
+                        createdBy: userId
+                    });
+                    await newAnalysis.save();
+                } catch (saveError) {
+                    console.error("Failed to save analysis history:", saveError);
+                }
+            }
+
+            return report;
+
+        } catch (agentError) {
+            console.warn(`[RISK SERVICE] ⚠️ Agent failed: ${agentError.message}. Falling back to legacy path.`);
+        }
+
+        // ─── LEGACY PATH (Fallback) ─────────────────────────
+        console.log('[RISK SERVICE] 📋 Using legacy single-prompt path...');
+
+        // 1. Get Contract Code
         let contractSourceCode = "";
         try {
-            // ...
-            // (Assuming you have logic here, but for brevity in tool call, I'm focusing on the main structure usage)
             const contractData = await ContractService.getEthereumContractSource(smart_contract_address);
             contractSourceCode = contractData.sourceCode || "";
         } catch (e) { contractSourceCode = "// Unavailable"; }
 
-        // 2. Get Liquidity Data (Same as before)
+        // 2. Get Liquidity Data
         let tokenData;
         try {
             tokenData = await RiskService.getTokenData(token_address, chainId);
@@ -190,7 +253,6 @@ class RiskService {
         // 3. AI Analysis (Groq) with Smart Fallback
         let aiResult;
         try {
-            // Use Groq instead of Gemini
             const fullAnalysis = await RiskService.analyzeTokenWithGroq(tokenData, contractSourceCode || "", token_name);
             if (fullAnalysis) {
                 aiResult = fullAnalysis;
@@ -209,7 +271,7 @@ class RiskService {
                 chain_id: chainId
             },
             tokenData,
-            ...aiResult // Spreads ai_insights_panel, etc.
+            ...aiResult
         };
 
         // Save to MongoDB if userId is provided

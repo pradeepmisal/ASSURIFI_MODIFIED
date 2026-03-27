@@ -208,12 +208,33 @@ class ContractService {
 
 
     /**
-     * Main Analysis Entry Point: Tries Groq -> Gemini -> Static
+     * Main Analysis Entry Point
+     * 
+     * AGENTIC PATH (primary): ReAct agent with tools, multi-step reasoning,
+     * output validation, and confidence scoring.
+     * 
+     * LEGACY PATH (fallback): Original Groq → Gemini → Static chain.
+     * Used when the agent fails, times out, or produces invalid output.
      */
 
     static async analyzeContractWithGemini(contractData) {
-        // NOTE: Method name kept as 'analyzeContractWithGemini' to avoid breaking existing callers
-        // even though it now supports Groq.
+        // ─── AGENTIC PATH (Primary) ─────────────────────────
+        try {
+            const { runContractAuditAgent } = await import('../agents/contractAuditor.agent.js');
+            console.log('[CONTRACT SERVICE] 🤖 Using agentic pipeline...');
+            const agentResult = await runContractAuditAgent(contractData);
+
+            // Add metadata for backward compatibility
+            agentResult.aiModelUsed = 'Agentic Pipeline (LangChain ReAct)';
+            return agentResult;
+
+        } catch (agentError) {
+            console.warn(`[CONTRACT SERVICE] ⚠️ Agent failed: ${agentError.message}. Falling back to legacy path.`);
+        }
+
+        // ─── LEGACY PATH (Fallback) ─────────────────────────
+        // Original implementation preserved exactly as-is for safety.
+        console.log('[CONTRACT SERVICE] 📋 Using legacy single-prompt path...');
 
         let codeForAnalysis = contractData.sourceCode;
 

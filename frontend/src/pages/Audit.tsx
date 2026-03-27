@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import SearchBar from "@/components/SearchBar";
 import { API_BASE_URL } from "@/config";
 import { useAuth } from "@/context/AuthContext";
+import { useLocation } from "react-router-dom";
 
 interface VulnerabilityItem {
   id: number;
@@ -56,6 +57,24 @@ const Audit = () => {
   const [isPinning, setIsPinning] = useState(false);
   const { toast } = useToast();
   const { token } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if we arrived from Autonomous Supervisor agent box click
+    if (location.state && location.state.token && location.state.agentData) {
+      const { token: routeToken, agentData } = location.state;
+      setContractAddress(routeToken);
+      setSelectedAddress(routeToken);
+      setActiveTab("address");
+
+      setVulnerabilities(agentData.vulnerabilities || []);
+      setAuditScore(agentData.overallScore || 0);
+      setSummary(agentData.summary || "");
+      setInvestorImpactSummary(agentData.investorImpactSummary || "");
+      setAuditComplete(true);
+      setProgressValue(100);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     // ... (theme existing logic)
@@ -451,8 +470,8 @@ const Audit = () => {
                       size="sm"
                       variant="outline"
                       className={`mt-2 gap-2 text-xs ${isPinned
-                          ? 'border-amber-500/30 text-amber-400 bg-amber-500/10 cursor-default'
-                          : 'border-slate-700 text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400'
+                        ? 'border-amber-500/30 text-amber-400 bg-amber-500/10 cursor-default'
+                        : 'border-slate-700 text-slate-300 hover:bg-amber-500/10 hover:border-amber-500/30 hover:text-amber-400'
                         }`}
                       onClick={handlePinToPortfolio}
                       disabled={isPinned || isPinning}

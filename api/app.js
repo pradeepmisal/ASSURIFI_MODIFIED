@@ -9,6 +9,7 @@ import sentimentRoutes from './routes/sentiment.routes.js';
 import riskRoutes from './routes/risk.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import portfolioRoutes from './routes/portfolio.routes.js';
+import supervisorRoutes from './routes/supervisor.routes.js';
 
 // Initialize Express App
 const app = express();
@@ -26,6 +27,7 @@ app.use('/search', searchRoutes);
 app.use('/', sentimentRoutes); // /analyze
 app.use('/', riskRoutes);      // /risk-analysis AND /get_token (Liquidity)
 app.use('/portfolio', portfolioRoutes); // Portfolio Shield
+app.use('/', supervisorRoutes); // /full-analysis & /full-analysis/stream
 
 // Health Check
 app.get('/health', (req, res) => {
