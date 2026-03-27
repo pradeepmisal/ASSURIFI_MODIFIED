@@ -45,6 +45,28 @@ class SentimentService {
                     }
                 };
 
+                // Attempt to fetch source data (Reddit / News) to populate frontend lists
+                try {
+                    [redditPosts, newsArticles] = await Promise.all([
+                        RedditService.fetchPosts(coin_name),
+                        NewsService.fetchNews(coin_name)
+                    ]);
+
+                    report.reddit_posts = redditPosts || [];
+                    report.news_articles = newsArticles || [];
+                    // Populate latest_news with top headlines if available
+                    report.latest_news = (newsArticles || []).slice(0, 5).map(n => ({
+                        content: n.title || n.summary || '',
+                        sentiment: 'neutral',
+                        date: n.date || new Date().toISOString()
+                    }));
+                } catch (fetchErr) {
+                    console.warn('[SentimentService] Could not fetch source data for report:', fetchErr.message);
+                    report.reddit_posts = report.reddit_posts || [];
+                    report.news_articles = report.news_articles || [];
+                    report.latest_news = report.latest_news || [];
+                }
+
                 return report;
             } catch (agentError) {
                 console.warn(`[SentimentService] ⚠️ Agent failed: ${agentError.message}. Falling back to legacy path.`);
