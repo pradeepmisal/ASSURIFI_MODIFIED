@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "npm run dev --prefix frontend",
-    "build": "cd frontend && npm install && npm run build",
+    "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "start": "node api/server.js",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "api:dev": "npx nodemon api/server.js",
     "dev:all": "npx concurrently \"npm run api:dev\" \"npm run dev --prefix frontend\""
+  },
+  "engines": {
+    "node": "20.x"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
