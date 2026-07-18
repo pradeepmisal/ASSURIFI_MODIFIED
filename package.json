@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "npm run dev --prefix frontend",
-    "build": "npm install --prefix frontend && npm run build --prefix frontend",
+    "build": "npm install --prefix frontend && npm run build --prefix frontend && node -e \"const fs=require('fs'); const path=require('path'); const src=path.resolve('frontend/dist'); const dest=path.resolve('dist'); fs.rmSync(dest,{recursive:true,force:true}); fs.mkdirSync(dest,{recursive:true}); for (const entry of fs.readdirSync(src,{withFileTypes:true})) { const srcPath=path.join(src, entry.name); const destPath=path.join(dest, entry.name); if (entry.isDirectory()) { fs.cpSync(srcPath, destPath, { recursive: true }); } else { fs.copyFileSync(srcPath, destPath); } }\"",
     "start": "node api/server.js",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
