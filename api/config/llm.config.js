@@ -6,7 +6,7 @@
  * Replaces scattered raw fetch() calls throughout the codebase.
  */
 
-import { ChatOpenAI } from '@langchain/openai';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { ChatGroq } from '@langchain/groq';
 
 // ─── LLM Instances ───────────────────────────────────────────
@@ -17,7 +17,7 @@ import { ChatGroq } from '@langchain/groq';
  */
 function createPrimaryLLM(options = {}) {
     return new ChatGroq({
-        model: options.model || 'llama-3.3-70b-versatile',
+        model: options.model || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
         temperature: options.temperature ?? 0.1,
         maxTokens: options.maxTokens || 4096,
         timeout: options.timeout || 30000,
@@ -31,16 +31,13 @@ function createPrimaryLLM(options = {}) {
  * Used when Groq is unavailable or rate-limited.
  */
 function createFallbackLLM(options = {}) {
-    return new ChatOpenAI({
-        model: options.model || 'gpt-4o-mini',
+    return new ChatGoogleGenerativeAI({
+        model: options.model || 'gemini-2.0-flash',
         temperature: options.temperature ?? 0.1,
-        maxTokens: options.maxTokens || 4096,
+        maxOutputTokens: options.maxTokens || 4096,
         timeout: options.timeout || 30000,
-        maxRetries: 0,
-        apiKey: process.env.GITHUB_MODELS_TOKEN,
-        configuration: {
-            baseURL: "https://models.inference.ai.azure.com",
-        }
+        maxRetries: 1,
+        apiKey: process.env.GEMINI_API_KEY
     });
 }
 

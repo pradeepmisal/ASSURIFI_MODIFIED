@@ -12,7 +12,7 @@
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { getPrimaryLLM, getFallbackLLM } from '../config/llm.config.js';
-import { createEtherscanTool } from '../tools/etherscan.tool.js';
+import { getMcpContractTools } from '../mcp/mcpClient.js';
 import { createStaticAnalysisTool } from '../tools/staticAnalysis.tool.js';
 import { createCodeParserTool } from '../tools/codeParser.tool.js';
 import { validateOutput, buildCorrectionPrompt, ContractAuditSchema } from '../evaluation/outputValidator.js';
@@ -74,9 +74,10 @@ async function _runAgentWithLLM(contractData, llm, llmName) {
     }));
 
     try {
-        // Step 1: Create tools with metrics tracking
+        // Step 1: Create tools with metrics tracking (Loading Etherscan tools dynamically via MCP Client)
+        const mcpTools = await getMcpContractTools(tracker);
         const tools = [
-            createEtherscanTool(tracker),
+            ...mcpTools.filter(t => contractData.sourceCode ? t.name !== 'etherscan_fetch' : true),
             createStaticAnalysisTool(tracker),
             createCodeParserTool(tracker),
         ];

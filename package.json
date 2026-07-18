@@ -4,13 +4,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npm run dev --prefix frontend",
     "build": "cd frontend && npm install && npm run build",
     "start": "node api/server.js",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "api:dev": "node api/server.js"
+    "api:dev": "npx nodemon api/server.js",
+    "dev:all": "npx concurrently \"npm run api:dev\" \"npm run dev --prefix frontend\""
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -19,6 +20,7 @@
     "@langchain/google-genai": "^2.1.21",
     "@langchain/groq": "^1.1.3",
     "@langchain/openai": "^1.2.11",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",

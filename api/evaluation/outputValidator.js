@@ -26,6 +26,31 @@ export const ContractAuditSchema = z.object({
     overallScore: z.number().min(0).max(100),
     summary: z.string().min(10),
     investorImpactSummary: z.string().min(10),
+    architecture: z.object({
+        isProxy: z.boolean(),
+        implementationAddress: z.string(),
+        proxyAdminAddress: z.string().optional(),
+        versionsCount: z.number().optional(),
+        upgradeHistory: z.array(
+            z.object({
+                blockNumber: z.number(),
+                implementation: z.string(),
+                date: z.string().optional(),
+            })
+        ).optional(),
+    }).optional(),
+    creatorHistory: z.object({
+        deployerAddress: z.string(),
+        deployedContractsCount: z.number(),
+        suspiciousContractsCount: z.number(),
+        relatedContracts: z.array(
+            z.object({
+                address: z.string(),
+                name: z.string().optional(),
+                status: z.string().optional(),
+            })
+        ),
+    }).optional(),
 });
 
 // ─── Risk Assessment Output Schema ───────────────────────────

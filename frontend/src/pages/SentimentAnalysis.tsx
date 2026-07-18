@@ -203,7 +203,9 @@ const CryptoSentimentDashboard = () => {
                           <span className="text-xs text-orange-500/80 font-bold">r/CryptoCurrency</span>
                           <span className="text-xs text-slate-600">Score: {post.score}</span>
                         </div>
-                        <h4 className="text-slate-200 font-medium text-sm mb-1 leading-snug">{post.title}</h4>
+                        <a href={post.url} target="_blank" rel="noopener noreferrer" className="text-slate-200 hover:text-orange-400 font-medium text-sm mb-1 leading-snug block transition-colors">
+                          {post.title}
+                        </a>
                         <p className="text-xs text-slate-500 line-clamp-2">{post.content}</p>
                       </div>
                     ))}

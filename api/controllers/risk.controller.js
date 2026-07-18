@@ -5,8 +5,12 @@ class RiskController {
     // --- Liquidity Proxy ---
     static async getToken(req, res) {
         try {
-            const { token_address, chain_id } = req.query;
-            const data = await RiskService.getTokenData(token_address, chain_id || 'solana');
+            const token_address = req.query.token_address || req.query.address;
+            const chain_id = req.query.chain_id || 'solana';
+            if (!token_address) {
+                return res.status(400).json({ error: 'Missing token_address parameter' });
+            }
+            const data = await RiskService.getTokenData(token_address, chain_id);
             return res.json(data);
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -28,7 +32,7 @@ class RiskController {
             const chain = chain_id || 'solana';
 
             // Pass req.user.id (if authenticated) to enable saving history
-            const userId = req.user ? req.user.id : null;
+            const userId = req.user ? (req.user._id || req.user.id) : null;
             const result = await RiskService.analyzeRisk(token_name, token_address, smart_contract_address, chain, userId);
             return res.json(result);
 
@@ -42,11 +46,12 @@ class RiskController {
     static async getHistory(req, res) {
         try {
             // req.user is populated by 'protect' middleware
-            if (!req.user || !req.user.id) {
+            if (!req.user) {
                 return res.status(401).json({ error: 'User not authenticated' });
             }
+            const userId = req.user._id || req.user.id;
 
-            const history = await RiskService.getUserHistory(req.user.id);
+            const history = await RiskService.getUserHistory(userId);
             return res.json(history);
         } catch (error) {
             console.error('Error fetching history:', error);

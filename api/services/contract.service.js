@@ -42,7 +42,9 @@ class ContractService {
                 address: contractAddress,
                 name: contractData.ContractName,
                 sourceCode: contractData.SourceCode,
-                compiler: contractData.CompilerVersion
+                compiler: contractData.CompilerVersion,
+                isProxy: contractData.Proxy === "1",
+                implementationAddress: contractData.Implementation || ""
             };
         } catch (error) {
             throw new Error(`Failed to retrieve contract source: ${error.message}`);
@@ -226,6 +228,9 @@ class ContractService {
 
             // Add metadata for backward compatibility
             agentResult.aiModelUsed = 'Agentic Pipeline (LangChain ReAct)';
+            if (contractData.address && contractData.address !== "Not provided") {
+                await ContractService.enrichMetadata(agentResult, contractData.address);
+            }
             return agentResult;
 
         } catch (agentError) {
@@ -337,13 +342,168 @@ ${escapedCode}
 
             // Add metadata about which AI model was used
             result.aiModelUsed = usedProvider;
+            
+            // Enrich metadata if address provided
+            if (contractData.address && contractData.address !== "Not provided") {
+                await ContractService.enrichMetadata(result, contractData.address);
+            }
+            
             return result;
 
         } catch (error) {
             console.error("AI Analysis Final Failure:", error.message);
             console.log("[DEBUG] ⚠️ FALLING BACK TO STATIC ANALYSIS");
-            // PLAN C: Static Analysis
-            return ContractService.analyzeContractStatic(contractData.sourceCode);
+            // Plan C: Static Analysis
+            const staticResult = ContractService.analyzeContractStatic(contractData.sourceCode);
+
+            // Populate architecture & creatorHistory in static fallback if address is provided
+            if (contractData.address && contractData.address !== "Not provided") {
+                await ContractService.enrichMetadata(staticResult, contractData.address);
+            }
+            return staticResult;
+        }
+    }
+
+    /**
+     * Enriches audit results with Etherscan proxy and deployer reputation metadata.
+     */
+    static async enrichMetadata(result, address) {
+        if (!address || address === "Not provided" || !result) return;
+        try {
+            if (!result.architecture) {
+                const EtherscanSource = await ContractService.getEthereumContractSource(address);
+                result.architecture = {
+                    isProxy: EtherscanSource.isProxy,
+                    implementationAddress: EtherscanSource.implementationAddress || "",
+                    versionsCount: EtherscanSource.isProxy ? 1 : 0,
+                    upgradeHistory: []
+                };
+                if (EtherscanSource.isProxy) {
+                    try {
+                        const upgrades = await ContractService.getProxyUpgradeHistory(address);
+                        result.architecture.upgradeHistory = upgrades;
+                        result.architecture.versionsCount = upgrades.length;
+                    } catch (upgErr) {
+                        console.error("Upgrade history error:", upgErr);
+                    }
+                }
+            }
+            if (!result.creatorHistory) {
+                result.creatorHistory = {
+                    deployerAddress: "0x...",
+                    deployedContractsCount: 0,
+                    suspiciousContractsCount: 0,
+                    relatedContracts: []
+                };
+                try {
+                    const creationData = await ContractService.getContractCreation(address);
+                    if (creationData && creationData.contractCreator) {
+                        const creator = creationData.contractCreator;
+                        result.creatorHistory.deployerAddress = creator;
+                        const related = await ContractService.getDeployerContracts(creator);
+                        result.creatorHistory.deployedContractsCount = related.length;
+                        result.creatorHistory.relatedContracts = related.map(item => ({
+                            address: item.address,
+                            name: "Unknown",
+                            status: "active"
+                        }));
+                    }
+                } catch (creatorErr) {
+                    console.error("Creator history error:", creatorErr);
+                }
+            }
+        } catch (err) {
+            console.error("Enrich metadata fetch error:", err);
+        }
+    }
+
+    /**
+     * Fetches creator address and deployment transaction hash for a contract.
+     * @param {string} contractAddress
+     * @returns {Promise<Object>}
+     */
+    static async getContractCreation(contractAddress) {
+        try {
+            const url = `https://api.etherscan.io/v2/api?chainid=1&module=contract&action=getcontractcreation&contractaddresses=${contractAddress}&apikey=${ETHERSCAN_API_KEY}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (!data || data.status !== "1" || !data.result || !data.result[0]) {
+                throw new Error(`Etherscan API error: ${data.message || JSON.stringify(data)}`);
+            }
+            return {
+                contractAddress: data.result[0].contractAddress,
+                contractCreator: data.result[0].contractCreator,
+                txHash: data.result[0].txHash
+            };
+        } catch (error) {
+            console.error(`[ContractService] Failed to retrieve contract creation for ${contractAddress}:`, error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetches other contracts deployed by the creator.
+     * @param {string} deployerAddress
+     * @returns {Promise<Array>}
+     */
+    static async getDeployerContracts(deployerAddress) {
+        try {
+            const url = `https://api.etherscan.io/v2/api?chainid=1&module=account&action=txlist&address=${deployerAddress}&startblock=0&endblock=99999999&sort=asc&apikey=${ETHERSCAN_API_KEY}&page=1&offset=100`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (!data || data.status !== "1" || !data.result) {
+                return [];
+            }
+            const creations = data.result
+                .filter(tx => tx.contractAddress && tx.contractAddress.trim() !== "")
+                .map(tx => ({
+                    address: tx.contractAddress,
+                    txHash: tx.hash,
+                    date: tx.timeStamp ? new Date(parseInt(tx.timeStamp) * 1000).toISOString() : null
+                }));
+            return creations;
+        } catch (error) {
+            console.error(`[ContractService] Failed to retrieve deployer contracts for ${deployerAddress}:`, error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Reconstructs proxy implementation upgrade history from logs.
+     * @param {string} proxyAddress
+     * @returns {Promise<Array>}
+     */
+    static async getProxyUpgradeHistory(proxyAddress) {
+        try {
+            const UPGRADED_TOPIC = "0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b";
+            const url = `https://api.etherscan.io/v2/api?chainid=1&module=logs&action=getLogs&address=${proxyAddress}&fromBlock=0&toBlock=latest&topic0=${UPGRADED_TOPIC}&apikey=${ETHERSCAN_API_KEY}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            if (!data || data.status !== "1" || !data.result) {
+                return [];
+            }
+            return data.result.map(log => {
+                const blockNumber = parseInt(log.blockNumber, 16);
+                const timeStamp = parseInt(log.timeStamp, 16);
+                
+                let implementation = log.topics[1];
+                if (implementation && implementation.startsWith("0x") && implementation.length >= 66) {
+                    implementation = "0x" + implementation.substring(26);
+                } else {
+                    implementation = log.data;
+                    if (implementation && implementation.startsWith("0x") && implementation.length >= 66) {
+                        implementation = "0x" + implementation.substring(26);
+                    }
+                }
+                return {
+                    blockNumber,
+                    implementation,
+                    date: new Date(timeStamp * 1000).toISOString()
+                };
+            });
+        } catch (error) {
+            console.error(`[ContractService] Failed to retrieve proxy history for ${proxyAddress}:`, error.message);
+            return [];
         }
     }
 }

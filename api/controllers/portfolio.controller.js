@@ -7,7 +7,10 @@ class PortfolioController {
     // Returns: { stats, pinnedContracts, history }
     static async getPortfolio(req, res) {
         try {
-            const userId = req.user.id;
+            if (!req.user) {
+                return res.status(401).json({ error: 'Not authorized' });
+            }
+            const userId = req.user._id || req.user.id;
 
             // Run all queries in parallel for speed
             const [history, pinnedContracts, totalScans, scansByType, avgScore] = await Promise.all([

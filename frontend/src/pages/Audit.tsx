@@ -52,6 +52,8 @@ const Audit = () => {
   const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityItem[]>([]);
   const [summary, setSummary] = useState("");
   const [investorImpactSummary, setInvestorImpactSummary] = useState("");
+  const [architecture, setArchitecture] = useState<any>(null);
+  const [creatorHistory, setCreatorHistory] = useState<any>(null);
   const [isDark, setIsDark] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [isPinning, setIsPinning] = useState(false);
@@ -71,6 +73,8 @@ const Audit = () => {
       setAuditScore(agentData.overallScore || 0);
       setSummary(agentData.summary || "");
       setInvestorImpactSummary(agentData.investorImpactSummary || "");
+      setArchitecture(agentData.architecture || null);
+      setCreatorHistory(agentData.creatorHistory || null);
       setAuditComplete(true);
       setProgressValue(100);
     }
@@ -174,6 +178,8 @@ const Audit = () => {
     setSummary("");
     setInvestorImpactSummary("");
     setAuditScore(0);
+    setArchitecture(null);
+    setCreatorHistory(null);
 
     try {
       // Simulate realtime progress
@@ -237,7 +243,9 @@ const Audit = () => {
       setAuditScore(data.overallScore || 0);
       setSummary(data.summary || "");
       setInvestorImpactSummary(data.investorImpactSummary || "");
-
+      setArchitecture(data.architecture || null);
+      setCreatorHistory(data.creatorHistory || null);
+      
       setProgressValue(100);
       setAuditComplete(true);
     } catch (err: any) {
@@ -507,6 +515,116 @@ const Audit = () => {
                             : "This contract has critical vulnerabilities that must be fixed."}
                       </p>
                     </div>
+
+                    {/* Proxy/Upgradeability Card */}
+                    {architecture && (
+                      <div className="border border-white/10 rounded-lg p-4 bg-white/5 backdrop-blur-md space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-medium text-white flex items-center gap-2">
+                            <Code className="h-4 w-4 text-cyan-400" /> Contract Architecture
+                          </h3>
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full uppercase border ${
+                            architecture.isProxy
+                              ? "bg-amber-500/10 text-amber-300 border-amber-500/20"
+                              : "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+                          }`}>
+                            {architecture.isProxy ? "Upgradeability (Proxy)" : "Immutable (Direct)"}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-300 space-y-2">
+                          <div className="flex justify-between border-b border-white/5 pb-2">
+                            <span>Logic Implementation:</span>
+                            <a
+                              href={`https://etherscan.io/address/${architecture.implementationAddress}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-cyan-400 hover:underline font-mono"
+                            >
+                              {architecture.implementationAddress.slice(0, 10)}...{architecture.implementationAddress.slice(-8)}
+                            </a>
+                          </div>
+                          {architecture.upgradeHistory && architecture.upgradeHistory.length > 0 && (
+                            <div className="space-y-2 pt-1">
+                              <span className="text-xs text-gray-400 uppercase tracking-wider block">Upgrade History Timeline</span>
+                              <div className="relative pl-4 border-l-2 border-slate-700 space-y-3">
+                                {architecture.upgradeHistory.map((upg: any, idx: number) => (
+                                  <div key={idx} className="relative text-xs">
+                                    <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-cyan-400 border border-slate-900" />
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Block #{upg.blockNumber}</span>
+                                      <span className="text-slate-500">{upg.date ? new Date(upg.date).toLocaleDateString() : 'Date N/A'}</span>
+                                    </div>
+                                    <div className="text-slate-300 font-mono mt-0.5">
+                                      Implementation: {upg.implementation.slice(0, 8)}...{upg.implementation.slice(-6)}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Creator reputation Profiler Card */}
+                    {creatorHistory && (
+                      <div className="border border-white/10 rounded-lg p-4 bg-white/5 backdrop-blur-md space-y-3">
+                        <h3 className="font-medium text-white flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-purple-400" /> Creator Reputation
+                        </h3>
+                        <div className="text-sm text-gray-300 space-y-2">
+                          <div className="flex justify-between border-b border-white/5 pb-2">
+                            <span>Deployer Address:</span>
+                            <a
+                              href={`https://etherscan.io/address/${creatorHistory.deployerAddress}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-purple-400 hover:underline font-mono"
+                            >
+                              {creatorHistory.deployerAddress.slice(0, 10)}...{creatorHistory.deployerAddress.slice(-8)}
+                            </a>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-center py-1">
+                            <div className="bg-slate-900/40 p-2 rounded border border-white/5">
+                              <span className="text-xs text-slate-400 block uppercase">Total Deployed</span>
+                              <span className="text-lg font-bold text-white">{creatorHistory.deployedContractsCount}</span>
+                            </div>
+                            <div className="bg-slate-900/40 p-2 rounded border border-white/5">
+                              <span className="text-xs text-slate-400 block uppercase font-medium">Suspicious Deployments</span>
+                              <span className={`text-lg font-bold ${creatorHistory.suspiciousContractsCount > 0 ? 'text-red-400' : 'text-slate-400'}`}>
+                                {creatorHistory.suspiciousContractsCount}
+                              </span>
+                            </div>
+                          </div>
+                          {creatorHistory.relatedContracts && creatorHistory.relatedContracts.length > 0 && (
+                            <div className="space-y-1">
+                              <span className="text-xs text-gray-400 uppercase tracking-wider block">Deployed Ecosystem Network</span>
+                              <div className="max-h-24 overflow-y-auto custom-scrollbar border border-white/5 rounded divide-y divide-white/5 bg-slate-950/20">
+                                {creatorHistory.relatedContracts.map((rel: any, idx: number) => (
+                                  <div key={idx} className="p-2 flex justify-between items-center text-xs">
+                                    <a
+                                      href={`https://etherscan.io/address/${rel.address}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-mono text-slate-300 hover:text-purple-300"
+                                    >
+                                      {rel.address.slice(0, 8)}...{rel.address.slice(-6)}
+                                    </a>
+                                    <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-semibold ${
+                                      rel.status === "suspicious"
+                                        ? "bg-red-400/10 text-red-300 border border-red-500/20"
+                                        : "bg-slate-800 text-slate-300"
+                                    }`}>
+                                      {rel.status || 'active'}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Vulnerabilities Section */}
                     <div>
